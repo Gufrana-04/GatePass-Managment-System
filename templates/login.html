@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Gimatex GatePass System</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!--link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"-->
+<!-- 1. Material Symbols (Local CSS) -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/material-symbols.css') }}">
+
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Times New Roman';
+}
+
+/* FULL PAGE BACKGROUND */
+body {
+    height: 100vh;
+    margin: 0;  /* optional: remove default body margin */
+    background-image: url("{{ url_for('static', filename='images/bg3.jpeg') }}");
+    background-repeat: no-repeat;
+    background-position: center center;
+    background-size: cover;
+    position: relative;
+    overflow: hidden;
+}
+
+/* FAINT GRADIENT OVERLAY */
+body::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        to right,
+        rgba(255,255,255,0.45),
+        rgba(255,255,255,0.45)
+    );
+    z-index: 1;
+}
+/* TOP COMPANY HEADER */
+.company-header {
+    position: absolute;
+    top: 25px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.company-header img {
+    width: 90px;
+}
+
+.company-header h1 {
+    font-size: 40px;
+    font-weight: 600;
+    color: #1e3c72;
+    letter-spacing: 0.5px;
+}
+
+/* FORM HEADING */
+.login-card h2 {
+    text-align: center;
+    font-size: 30px;
+    color: #040505;
+    margin-bottom: 20px;
+}
+
+
+/* LOGIN CARD */
+.login-card {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%,-50%);
+    width: 90%;
+    max-width: 550px;
+    background: rgba(255,255,255,0.95);
+    border-radius: 14px;
+    padding: 30px;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.25);
+    z-index: 2;
+}
+
+/* LOGO */
+.logo {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 10px;
+}
+
+.logo img {
+    width: 80px;
+}
+
+/* TITLES */
+.login-card h2 {
+    text-align: center;
+    color: #1e3c72;
+}
+
+.login-card p {
+    text-align: center;
+    font-size: 14px;
+    color: #555;
+    margin-bottom: 20px;
+}
+
+/* ERROR */
+.error-box {
+    background-color: #fdecea;
+    color: #b71c1c;
+    border: 1px solid #f5c2c7;
+    padding: 12px;
+    margin-bottom: 15px;
+    border-radius: 6px;
+    font-size: 14px;
+    text-align: center;
+}
+/* FORM */
+.form-group {
+    margin-bottom: 14px;
+}
+
+.form-group label {
+    font-size: 15px;
+    color: #333;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    margin-top: 5px;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: #2a5298;
+}
+
+
+
+/*EYE ICON*/
+.password-container {
+    position: relative;
+    width: 100%;
+}
+
+.password-container input {
+    width: 100%;
+    padding: 10px 40px 10px 10px;
+    font-size: 13px;
+}
+
+.eye-icon {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    user-select: none;
+    color: #555;
+}
+
+.eye-icon:hover {
+    color: #000;
+}
+
+/* Wrapper to position arrow */
+.custom-select-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+/* Dropdown select style */
+.custom-select-wrapper select {
+    width: 100%;
+    padding: 10px 40px 10px 12px; /* leave space for arrow */
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 13px;
+    color: #333;
+    background-color: #fff;
+    appearance: none; /* remove default arrow */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    cursor: pointer;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.custom-select-wrapper select:focus {
+    outline: none;
+    border-color: #2a5298;
+    box-shadow: 0 0 5px rgba(42, 82, 152, 0.4);
+}
+
+/* Custom arrow */
+.custom-arrow {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none; /* click goes to select */
+    font-size: 14px;
+    color: #555;
+}
+
+/* Hover effect for the select */
+.custom-select-wrapper select:hover {
+    border-color: #2a5298;
+}
+
+
+
+/* BUTTONS */
+.buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.btn-login {
+    flex: 1;
+    background: linear-gradient(135deg, #1e3c72, #2a5298);
+    color: white;
+    border: none;
+    padding: 10px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.btn-cancel {
+    flex: 1;
+    background: #e6e6e6;
+    border: none;
+    padding: 10px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+/* RESPONSIVE */
+@media (max-height: 650px), (max-width: 600px) {
+
+    body {
+        overflow-y: auto;
+    }
+
+    .company-header {
+        position: relative;
+        top: 0;
+        left: 0;
+        transform: none;
+        margin: 20px auto 10px;
+        justify-content: center;
+        text-align: center;
+    }
+
+    .login-card {
+        position: relative;
+        top: 0;
+        right: auto;
+        transform: none;
+        margin: 20px auto 40px;
+    }
+}
+/*TABLET*/
+@media (max-width: 900px) {
+    .login-card {
+        width: 90%;
+        max-width: 520px;
+        padding: 25px;
+    }
+
+    .company-header h1 {
+        font-size: 32px;
+    }
+}
+
+@media (max-width: 600px), (max-height: 650px) {
+
+    body {
+        overflow-y: auto;
+    }
+
+    .company-header {
+        position: relative;
+        inset: auto;
+        transform: none;
+        margin: 20px auto;
+        display: flex;
+        flex-direction: row;      /* ✅ stay in one line */
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        text-align: center;
+    }
+
+    .company-header img {
+        width: 70px;
+    }
+
+    .company-header h1 {
+        font-size: 40px;
+    }
+
+    .login-card {
+        position: relative;
+        inset: auto;
+        transform: none;
+        width: 92%;
+        margin: 20px auto 40px;
+        padding: 20px;
+    }
+
+    .login-card h2 {
+        font-size: 22px;
+    }
+
+    .buttons {
+        flex-direction: column;
+    }
+}
+</style>
+</head>
+<script src="/static/login.js"></script>
+<script>
+function togglePassword() {
+    const password = document.getElementById("password");
+    const eye = document.getElementById("eye");
+
+    if (password.type === "password") {
+        password.type = "text";
+        eye.textContent = "visibility_off";
+    } else {
+        password.type = "password";
+        eye.textContent = "visibility";
+    }
+}
+</script>
+
+
+<body>
+    <div class="company-header">
+    <img src="{{ url_for('static', filename='images/gima_logo-removebg-preview.png') }}" alt="Gimatex Logo">
+    <h1>Gimatex Industries Pvt. Ltd.</h1>
+</div>
+
+
+<div class="login-card">
+    <div class="logo">
+       <h2>{{SYSTEM_NAME}}</h2>
+    </div>
+
+
+    {% if error %}
+      <div class="error-box">
+          <strong>⚠ {{ error }}</strong>
+      </div>
+    {% endif %}
+
+    <form action="/login" method="POST">
+        <div class="form-group">
+            <label>Login Name</label>
+            <input type="text" name="username" placeholder="Enter login name" required >
+            <span id="loginName_msg"></span>
+        </div>
+
+        <div class="form-group">
+    <label>Password</label>
+
+    <div class="password-container">
+        <input type="password"
+               id="password"
+               name="password"
+               minilength="10"
+               maxlength="10"
+               placeholder="Enter password"
+               required>
+        <span id="password_msg"></span>
+
+        <span class="material-symbols-outlined eye-icon"
+              id="eye"
+              onclick="togglePassword()">
+            visibility
+        </span>
+    </div>
+</div>
+
+
+        <div class="form-group dropdown-container">
+    <label for="site_code">Site Code:</label>
+    <div class="custom-select-wrapper">
+        <select name="site_code" id="site_code" required>
+           <option value="">--Select Site--</option>
+           {% for code in site_codes %}
+           <option value="{{ code }}" {% if code == site_code %}selected{% endif %}>{{ code }}</option>
+           {% endfor %}
+        </select>
+        <span class="custom-arrow">▼</span>
+    </div>
+</div>
+
+
+        <div class="buttons">
+            <button class="btn-login">Login</button>
+            <button type="reset" class="btn-cancel">Cancel</button>
+        </div>
+    </form>
+</div>
+
+</body>
+</html> 

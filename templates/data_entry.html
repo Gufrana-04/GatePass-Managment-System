@@ -1,0 +1,3184 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>GatePass Data Entry</title>
+<!--link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"-->
+
+<!--<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>-->
+<!-- 1. Material Symbols (Local CSS) -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/material-symbols.css') }}">
+
+    <!-- 2. DataTables (Local CSS - note the new name 'dataTables.dataTables.min.css') -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dataTables.min.css') }}">
+
+    <!-- 3. jQuery (Local JS - MUST come before DataTables JS) -->
+    <script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
+
+    <!-- 4. DataTables (Local JS - note the new name 'dataTables.min.js') -->
+    <script src="{{ url_for('static', filename='js/dataTables.min.js') }}"></script>
+
+
+</head>
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    height: 100%;
+    margin: 0;
+    font-family: "Times New Roman", Times, serif;
+    background: #e6edf7;
+}
+
+/* ── FORM TITLE BAR ── */
+.form-titlebar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    height: 34px;
+    background: linear-gradient(90deg, #0f172a 0%, #1e3a5f 60%, #1e3c72 100%);
+    border-bottom: 2px solid #6366f1;
+    padding: 0 14px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+    flex-shrink: 0;
+}
+
+.form-titlebar .material-symbols-outlined {
+    font-size: 17px;
+    color: #a5b4fc;
+}
+
+.form-titlebar-divider {
+    width: 1px;
+    height: 18px;
+    background: #334155;
+}
+
+.form-titlebar-text {
+    font-family: 'Segoe UI', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    color: #e5e7eb;
+    letter-spacing: 0.5px;
+    flex: 1;
+}
+
+/* Layout */
+.main-layout {
+    display: flex;
+    height: calc(100vh - 34px);
+}
+
+.combined-panel {
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid #999;
+}
+.panels-row {
+    display: flex;
+    flex-direction: row;      /* left-panel and tab-nav-panel side by side */
+    flex: 1;
+}
+/* Left panel */
+.left-panel {
+    width: 80px;
+    background: #cfd7e6;
+    display: flex;
+     border-right: 1px solid #999;
+    flex-direction: column;
+}
+.lp-calendar-wrapper {
+    padding: 5px 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    background: #cfd7e6;
+    border-bottom: 1px solid #999;
+}
+
+.lp-month-display {
+    font-family: 'Segoe UI', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: #1e2a3a;
+    background: #f1f2f5;
+    border: 1px solid #2e2e2e;
+    border-radius: 6px;
+    padding: 2px 8px;
+    min-width: 62px;
+    text-align: center;
+    letter-spacing: 0.5px;
+    user-select: none;
+}
+
+.lp-month-arrows {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.lp-arrow-btn {
+    background: #e0e6f0;
+    border: 1px solid #8899bb;
+    border-radius: 3px;
+    font-size: 9px;
+    line-height: 1;
+    padding: 1px 4px;
+    cursor: pointer;
+    color: #2e3a50;
+    transition: background 0.12s;
+}
+
+.lp-arrow-btn:hover {
+    background: #c5d0e8;
+    border-color: #4a6090;
+}
+.left-panel button {
+    margin: 6px;
+    padding: 6px;
+    font-size: 12px;
+}
+
+/* NAV PANEL */
+.tab-nav-panel {
+    width: 80px;
+    flex: 0 0 80px;
+    background: #cfd7e6;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+.tab-nav-panel button {
+    margin: 6px ;
+    padding: 6px;
+    font-size: 12px;
+}
+.tab-nav-panel {
+    width: 110px;
+    display: flex;
+    flex-direction: column;
+}
+.nav-action {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.nav-label {
+    font-size: 12.85px;
+    color: #2e2e2e;
+    white-space: nowrap;
+}
+/* Confirm Button - Green */
+.btn-confirm {
+    background-color: #2e7d32 !important;
+    color: white !important;
+    border: none;
+}
+
+.btn-confirm:hover:not(:disabled) {
+    background-color: #32ff32 !important;
+}
+
+/* Cancel Button - Red */
+.btn-cancel {
+    background-color: #c62828 !important;
+    color: white !important;
+    border: none;
+}
+
+.btn-cancel:hover:not(:disabled) {
+    background-color: #8e0000 !important;
+}
+
+.btn-confirm .material-symbols-outlined,
+.btn-cancel .material-symbols-outlined {
+    color: white !important;
+}
+
+.right-content {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;      /* IMPORTANT */
+    overflow: hidden;   /* IMPORTANT */
+}
+/* Simple Modal Styling */
+.simple-modal {
+    display: none;  /* Hidden by default */
+    position: fixed;  /* Fixed position to make it stay centered on the screen */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* Dimmed background */
+    justify-content: center; /* Center horizontally */
+    align-items: center; /* Center vertically */
+    z-index: 10000; /* Ensure it is above other content */
+}
+
+.simple-modal-content {
+    background-color: rgb(233, 242, 255);
+    padding: 20px;
+    border-radius: 10px;
+    width: 50%;
+    max-width: 400px;
+    text-align: center;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    position: relative;
+}
+
+.simple-modal-close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 30px;
+    font-weight: bold;
+    color: #aaa;
+    cursor: pointer;
+}
+
+.simple-modal-close:hover {
+    color: black;
+}
+.modal-ok-btn {
+    padding: 6px 18px;
+    background: #417baa;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.modal-ok-btn:hover {
+    background: #1f4fbf;
+}
+
+/* Tabs */
+.tabs {
+    background: #b8c7e0;
+    padding: 5px;
+    display: flex;
+    border-bottom: 1px solid #999;
+}
+.tab-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.tab {
+    padding: 6px 14px;
+    border: 1px solid #777;
+    background: #e6edf7;
+    margin-right: 4px;
+    font-size: 13px;
+}
+.tab.active {
+    background: white;
+    font-weight: bold;
+}
+
+/* Grid */
+th {
+    position: relative;
+}
+
+.resizer {
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 5px;
+    cursor: col-resize;
+    user-select: none;
+    height: 100%;
+}
+
+.resizer:hover {
+    background: rgba(0, 0, 0, 0.3);
+}
+#gatepassTable {
+    table-layout: fixed;
+    width: 100%;
+}
+.grid-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.table-scroll {
+    flex: 1;
+    overflow: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+#gatepassTable thead th {
+    position: sticky;
+    top: 0;
+    background: #c6d4f0;
+    z-index: 2;
+    border: 1px solid #999;
+    padding: 5px;
+}
+#gatepassTable td {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Restore DataTables v2 sorting arrows */
+table.dataTable thead th {
+    position: relative;
+}
+
+/* Make sure arrows are visible */
+table.dataTable thead th.sorting::after,
+table.dataTable thead th.sorting_asc::after,
+table.dataTable thead th.sorting_desc::after {
+    opacity: 1 !important;
+}
+td {
+    border: 1px solid #ccc;
+    padding: 4px;
+}
+
+#gatepassTable th {
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.sort-icons {
+    display: inline-block;
+    width: 14px;
+    margin-left: 5px;
+    font-size: 10px;
+}
+
+.sort-icons .up,
+.sort-icons .down {
+    display: none;
+}
+
+/* Make DataTable Compact */
+#gatepassTable th,
+#gatepassTable td {
+    padding: 2px 4px !important;   /* reduce spacing */
+    font-size: 14px;               /* slightly smaller text */
+}
+
+/* ── ALIGNMENT: strings left, numbers right ──────────────── */
+
+/* Gatepass grid — all cells left-aligned by default */
+#gatepassTable thead th,
+#gatepassTable tbody td {
+    text-align: left;
+}
+
+
+#detailTable th:nth-child(1) { width: 10px; text-align: right; }   /* Sr */
+#detailTable th:nth-child(2) { width: 30px; text-align: left; }   /* Item Code */
+#detailTable th:nth-child(3) { min-width: 200px; text-align: left; }/* Item Name */
+#detailTable th:nth-child(4) { width: 20px; text-align: left; }    /* UOM */
+#detailTable th:nth-child(5) { width: 20px; text-align: right; }   /* Qty */
+
+#detailTable td:nth-child(1) { text-align: right; }  /* Sr - number */
+#detailTable td:nth-child(2) { text-align: left; }   /* Item Code - string */
+#detailTable td:nth-child(3) { text-align: left; }   /* Item Name - string */
+#detailTable td:nth-child(4) { text-align: left; }   /* UOM - string */
+#detailTable td:nth-child(5) { text-align: right; }  /* Qty - number */
+
+#gatepassTable tbody tr {
+    height: 24px;                  /* fixed row height */
+}
+
+/* Zebra Pattern */
+tbody tr:nth-child(odd) {
+    background-color: #ffffff;   /* white rows */
+}
+
+tbody tr:nth-child(even) {
+    background-color: #f5f9ff;   /* light blue rows */
+}
+
+.active-row {
+    background-color: #ffe8a3 !important;
+}
+
+
+/* Full row green for Y */
+#gatepassTable tbody tr.confirmed-row td {
+    background-color: #92ff92 !important;
+    color: #1a3a1a !important;
+}
+#gatepassTable tbody tr.confirmed-row td:first-child {
+    background-color: #92ff92 !important;
+    font-weight: bold;
+}
+/* Full row red for X */
+#gatepassTable tbody tr.cancelled-row td {
+    background-color: #fda6a6 !important;
+    color: #3a1a1a !important;
+}
+#gatepassTable tbody tr.cancelled-row td:first-child {
+    background-color: #fda6a6 !important;
+    font-weight: bold;
+}
+/*HEADER TAB CONTAINER*/
+#headerTab {
+    background: #ffffff;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow-y: auto;
+}
+/* Active row yellow — placed AFTER confirmed/cancelled so it always wins */
+#gatepassTable tbody tr.active-row td,
+#gatepassTable tbody tr.confirmed-row.active-row td,
+#gatepassTable tbody tr.cancelled-row.active-row td,
+#detailBody tr.active-row td {
+    background-color: #ffe8a3 !important;
+    color: #1a1a1a !important;
+}
+/*HEADER FORM */
+.header-form {
+        flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    background: #f3f6fc;
+    border: 1px solid #9aa8c7;
+    padding: 10px;
+    font-size: 15px;
+    color: #1f2937;
+}
+
+/*SECTION BAR (Gatepass Info, Supplier, etc.) */
+.header-form .section {
+    margin: 10px 0 6px;
+    padding: 4px 8px;
+    font-weight: bold;
+    background: #c6d4f0;
+    border: 1px solid #9aa8c7;
+}
+
+/*ROW LAYOUT*/
+.header-form .row {
+    display: grid;
+    grid-template-columns:
+        140px minmax(150px, 1fr)
+        140px minmax(150px, 1fr)
+        140px minmax(150px, 1fr);
+    gap: 6px 10px;
+    margin-bottom: 6px;
+    align-items: center;
+}
+
+.header-form input,
+.header-form select {
+    width: 100%;
+    max-width: 100%;
+}
+
+/* Rows marked as full */
+.header-form .row.full {
+    grid-template-columns: 140px 1fr 140px 1fr;
+}
+
+/* ==============================
+   LABELS
+   ============================== */
+
+.header-form label {
+    text-align: right;
+    padding-right: 6px;
+    white-space: nowrap;
+    font-weight: 500;
+}
+
+/* ==============================
+   INPUTS / SELECTS
+   ============================== */
+
+.header-form input,
+.header-form select {
+    height: 22px;
+    padding: 2px 1px;
+    font-size: 13px;
+    border: 1.2px solid #7c8fb5;
+    background-color: #e6ebf5;
+    color: black;
+    width: 100%;
+}
+
+.readonly-select {
+    pointer-events: none;
+    background-color: #e6ebf5 !important;
+    color: #374151;
+    opacity: 0.85;
+}
+/* Readonly fields (VB-style) */
+.header-form input[readonly] {
+    background-color: #e6ebf5;
+    color: #374151;
+}
+
+/* Editable (non-readonly) inputs in header form get white background */
+.header-form input:not([readonly]),
+.header-form select:not(.readonly-select) {
+    background-color: #ffffff;
+}
+
+/* ==============================
+   DROPDOWN LOOK (ERP STYLE)
+   ============================== */
+
+.select-wrap {
+    position: relative;
+    width: 100%;
+}
+
+.select-wrap::after {
+    content: "▾";
+    position: absolute;
+    right: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    font-size: 13px;
+    color: #334155;
+}
+
+.header-form select {
+    appearance: none;
+    -webkit-appearance: none;
+    padding-right: 22px;
+    width: 100%;
+}
+
+/* ==============================
+   FOCUS (KEYBOARD FRIENDLY)
+   ============================== */
+
+.header-form input:focus {
+    outline: none;
+    border-color: #4f46e5;
+    background-color: #ffffff;
+}
+
+.header-form select:focus {
+    outline: none;
+    border-color: #4f46e5;
+    background-color: #e6ebf5;
+}
+
+/* ==============================
+   RESPONSIVE SAFETY
+   ============================== */
+
+@media (max-width: 1200px) {
+    .header-form .row {
+        grid-template-columns: 140px 1fr 140px 1fr;
+    }
+}
+
+@media (max-width: 800px) {
+    .header-form .row,
+    .header-form .row.full {
+        grid-template-columns: 140px 1fr;
+    }
+}
+
+/* ==============================
+   SUPPLIER AUTOCOMPLETE
+   ============================== */
+.ac-wrap {
+    position: relative;
+    width: 100%;
+}
+
+.ac-wrap input {
+    width: 100%;
+}
+
+.ac-dropdown {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    min-width: 320px;
+    background: #fff;
+    border: 1px solid #7c8fb5;
+    border-top: none;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 9999;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.12);
+}
+
+.ac-dropdown.open {
+    display: block;
+}
+
+.ac-item {
+    padding: 4px 8px;
+    font-size: 12px;
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    border-bottom: 1px solid #eef0f5;
+}
+
+.ac-item:hover,
+.ac-item.active {
+    background: #d6e4f7;
+}
+
+#detailTab {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+#detailable {
+    table-layout: fixed;
+    width: max-content;   /* important */
+    min-width: 100%;
+}
+
+/* TOP GRID - 60% */
+.detail-grid {
+    height: 65%;
+    overflow: auto;
+    border-bottom: 1px solid #9aa8c7;
+}
+
+/* BOTTOM FORM - 40% */
+/* SECTION*/
+.detail-form .section {
+    margin: 5px;
+    padding: 4px 8px;
+    font-weight: bold;
+    background: #c6d4f0;
+    border: 1px solid #9aa8c7;
+}
+.detail-form {
+    flex: 0 0 35%;
+    background: #f3f6fc;
+    margin: 6px;
+    border: 1px solid #8ea3cc;
+    padding: 10px;
+    box-shadow: inset 0 0 4px #cfd8ee;
+    color: #1f2937;
+    font-size: 13px;
+}
+
+
+/* Grid table */
+.detail-grid table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.detail-grid th {
+    background: #c6d4f0;
+    border: 1px solid #9aa8c7;
+    padding: 4px;
+}
+
+.detail-grid td {
+    border: 1px solid #cbd5f5;
+    padding: 3px;
+}
+
+/* Reuse header styles */
+.detail-form .row {
+    display: grid;
+    grid-template-columns: 140px 220px 140px 220px;
+    gap: 6px 10px;
+    margin-bottom: 6px;
+    align-items: center;
+}
+
+.detail-form .row.full {
+    grid-template-columns: 140px 1fr;
+}
+
+.detail-form label {
+     text-align: right;
+    padding-right: 6px;
+    white-space: nowrap;
+    font-weight: 500;
+}
+
+.detail-form input,
+.detail-form textarea {
+    height: 22px;
+    outline: none;
+    padding: 2px 1px;
+    font-size: 13px;
+    border: 1px solid #7c8fb5;
+}
+
+.detail-form textarea {
+    height: 40px;
+    resize: none;
+}
+
+/* ==============================
+   FOCUS (KEYBOARD FRIENDLY)
+   ============================== */
+
+.detail-form input:focus,
+.detail-form select:focus {
+    outline: none;
+    border-color: #4f46e5;
+    background: #ffffff;
+}
+/* small screen*/
+@media (max-width: 1200px) {
+    .detail-grid {
+        flex: 0 0 58%;
+    }
+    .detail-form {
+        flex: 0 0 42%;
+        padding: 6px;
+    }
+    .detail-form .row {
+        grid-template-columns: 120px 200px 120px 200px;
+    }
+}
+/* tablet view*/
+@media (max-width: 992px) {
+    #detailTab {
+        flex-direction: column;
+    }
+    .detail-grid {
+        flex: 0 0 50%;
+    }
+    .detail-form {
+        flex: 0 0 50%;
+    }
+    .detail-form .row {
+        grid-template-columns: 120px 1fr;
+    }
+}
+/* small tablet*/
+@media (max-width: 768px) {
+    .detail-grid {
+        flex: 0 0 45%;
+    }
+    .detail-form {
+        flex: 0 0 55%;
+    }
+    .detail-form .row {
+        grid-template-columns: 1fr;
+    }
+    .detail-form label {
+        text-align: left;
+        padding-right: 0;
+    }
+}
+/* mobile view*/
+@media (max-width: 576px) {
+    #detailTab {
+        height: auto;
+    }
+    .detail-grid {
+        flex: none;
+        height: 240px;
+    }
+    .detail-form {
+        flex: none;
+        height: auto;
+    }
+    .detail-grid table {
+        font-size: 12px;
+    }
+    .detail-form input,
+    .detail-form textarea {
+        width: 100%;
+    }
+}
+/* ==============================
+   GLOBAL RESPONSIVE LAYOUT
+   ============================== */
+
+@media (max-width: 1024px) {
+
+    .main-layout {
+        flex-direction: column;
+        height: auto;
+    }
+
+    .combined-panel {
+        width: 100%;
+        flex-direction: column;
+        border-right: none;
+        border-bottom: 1px solid #999;
+    }
+    .left-panel {
+        width: 100%;
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+    .tab-nav-panel {
+        width: 100%;
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+
+    .left-panel button {
+        flex: 0 0 auto;
+    }
+    
+
+    .tab-nav-panel button {
+        flex: 0 0  auto;
+    }
+
+    .right-content {
+        flex-grow: 1;
+    }
+}
+@media (max-width: 1024px) {
+    .tab-nav-panel {
+        width: auto;
+        flex: 1 1 auto;
+        min-width: 0;
+        max-width: none;
+
+        flex-direction: row;
+        justify-content: center;
+    }
+}
+
+/* mobile-level*/
+@media (max-width: 600px) {
+
+    .tabs {
+        flex-wrap: wrap;
+    }
+
+    .tab {
+        flex: 1 1 auto;
+        text-align: center;
+    }
+
+    table {
+        font-size: 12px;
+    }
+}
+</style>
+
+<body>
+
+<!-- FORM TITLE BAR -->
+<div class="form-titlebar">
+    <span class="material-symbols-outlined">receipt_long</span>
+    <div class="form-titlebar-divider"></div>
+    <span class="form-titlebar-text">Gatepass Data Entry</span>
+</div>
+
+<div class="main-layout">
+     <div class="combined-panel">
+        <div class="lp-calendar-wrapper">
+            <span id="monthYearDisplay" class="lp-month-display">JAN-25</span>
+            <div class="lp-month-arrows">
+                <button class="lp-arrow-btn" onclick="changeMonth(1)" title="Next Month">▲</button>
+                <button class="lp-arrow-btn" onclick="changeMonth(-1)" title="Prev Month">▼</button>
+            </div>
+        </div>
+    <!-- LEFT BUTTON PANEL -->
+     <div class="panels-row">
+    <div class="left-panel">
+    <div class="nav-action">
+        <button id="btn-lp-refresh" onclick="refreshGatepass()">
+            <span class="material-symbols-outlined">refresh</span>
+        </button>
+        <span class="nav-label">Refresh</span>
+    </div>
+
+    <div class="nav-action">
+        <button id="btn-lp-view" type="button" onclick="viewGatepass()">
+            <span class="material-symbols-outlined">folder_open</span>
+        </button>
+        <span class="nav-label">View</span>
+    </div>
+
+    <div class="nav-action">
+        <button id="btn-lp-add" onclick="addGatepass()">
+            <span class="material-symbols-outlined">add_circle</span>
+        </button>
+        <span class="nav-label">Add</span>
+    </div>
+
+    <div class="nav-action">
+        <button id="btn-lp-edit" onclick="editGatepass()">
+            <span class="material-symbols-outlined">edit</span>
+        </button>
+        <span class="nav-label">Edit</span>
+    </div>
+
+<div class="nav-action">
+    <button id="btn-lp-drop" onclick="dropGatepass()">
+        <span class="material-symbols-outlined">delete</span>
+    </button>
+    <span class="nav-label">Drop</span>
+</div>
+
+    <div class="nav-action">
+        <button id="btn-lp-save">
+            <span class="material-symbols-outlined">save</span>
+        </button>
+        <span class="nav-label">Save</span>
+    </div>
+
+    <div class="nav-action">
+        <button id="btn-lp-abort" onclick="abortGatepass()">
+    <span class="material-symbols-outlined">cancel</span>
+</button>
+
+        <span class="nav-label">Abort</span>
+    </div>
+
+    <div class="nav-action">
+        <button id="btn-lp-confirm" class="btn-confirm" onclick="confirmGatepass()">
+            <span class="material-symbols-outlined">done_outline</span>
+        </button>
+        <span class="nav-label">Confirm</span>
+    </div>
+
+    <div class="nav-action">
+        <button id="btn-lp-cancel" class="btn-cancel" onclick="cancelGatepass()">
+            <span class="material-symbols-outlined">close</span>
+        </button>
+        <span class="nav-label">Cancel</span>
+    </div>
+
+</div>
+    <!-- NEW TAB NAV PANEL -->
+         <div class="tab-nav-panel">
+
+    <div class="nav-action">
+        <button onclick="prevTab()">
+            <span class="material-symbols-outlined">chevron_left</span>
+        </button>
+        <span class="nav-label">Previous</span>
+    </div>
+
+    <div class="nav-action">
+        <button onclick="nextTab()">
+            <span class="material-symbols-outlined">chevron_right</span>
+        </button>
+        <span class="nav-label">Next</span>
+    </div>
+
+    <div class="nav-action">
+        <button id="btn-detail-edit" onclick="openDetailTab()">
+    <span class="material-symbols-outlined">contract_edit</span>
+</button>
+
+        <span class="nav-label">Details Edit</span>
+    </div>
+
+    <div class="nav-action">
+        <button id="btn-detail-ok" onclick="saveDetail()">
+            <span class="material-symbols-outlined">check_circle</span>
+        </button>
+        <span class="nav-label">OK</span>
+    </div>
+
+    <div class="nav-action">
+        <button id="btn-detail-add" onclick="addDetailRow()">
+            <span class="material-symbols-outlined">add_circle</span>
+        </button>
+        <span class="nav-label">Add</span>
+    </div>
+
+    <div class="nav-action">
+        <button id="btn-detail-drop" onclick="dropDetailRow()">
+            <span class="material-symbols-outlined">delete</span>
+        </button>
+        <span class="nav-label">Drop</span>
+    </div>
+
+
+</div>
+</div>
+</div>
+    <!-- RIGHT CONTENT -->
+    <div class="right-content">
+
+        <!-- TAB BAR -->
+        <div class="tabs">
+            <button class="tab active">GatePass Grid</button>
+            <button class="tab">GatePass Header</button>
+            <button class="tab">GatePass Detail</button>
+        </div>
+
+        <!-- DATA GRID -->
+        <div id="gridTab" class="grid-container tab-content">
+            <!-- SEARCH / FILTER AREA -->
+<div class="grid-search" style="padding: 8px; background: #f3f6fc; border-bottom: 1px solid #9aa8c7; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+
+    <!-- Site Code Dropdown -->
+    <label for="siteCodeSelect" style="font-weight: 300;">Site Code:</label>
+    <select id="siteCodeSelect">
+         <option value="">-- Select Site --</option>
+    </select>
+
+    <!-- Search Input -->
+    <label for="searchInput" style="font-weight: 300;">GP No:</label>
+    <input type="text" id="searchInput" placeholder="Enter GP No, Vehicle, Supplier..." style="padding: 4px; width: 220px;">
+
+    <!-- Optional Search Button -->
+    <button id="searchBtn" style="padding: 4px 10px;">Search</button>
+
+</div>
+            <div class="table-scroll">
+            <table id="gatepassTable" class="display">
+ 
+                <thead>
+                    <tr>
+                        <th data-type="string">Confirmed  <span class="sort-icons">
+        <span class="up">▲</span>
+        <span class="down">▼</span>
+    </span></th>
+                        <th data-type="string">Site code<span class="sort-icons">
+        <span class="up">▲</span>
+        <span class="down">▼</span>
+    </span></th>
+                        <th data-type="string">Gp no<span class="sort-icons">
+        <span class="up">▲</span>
+        <span class="down">▼</span>
+    </span></th>
+                        <th data-type="date">Gp date<span class="sort-icons">
+        <span class="up">▲</span>
+        <span class="down">▼</span>
+    </span></th>
+                        <th data-type="string">Gp type<span class="sort-icons">
+        <span class="up">▲</span>
+        <span class="down">▼</span>
+    </span></th>
+                        <th data-type="string">Supp code<span class="sort-icons">
+        <span class="up">▲</span>
+        <span class="down">▼</span>
+    </span></th>
+                        <th data-type="string">Supp name<span class="sort-icons">
+        <span class="up">▲</span>
+        <span class="down">▼</span>
+    </span></th>
+                        <th data-type="string">Addr1<span class="sort-icons">
+        <span class="up">▲</span>
+        <span class="down">▼</span>
+    </span></th>
+                        <th data-type="string">Addr2<span class="sort-icons">
+        <span class="up">▲</span>
+        <span class="down">▼</span>
+    </span></th>
+                        <th data-type="string">Addr3<span class="sort-icons">
+        <span class="up">▲</span>
+        <span class="down">▼</span>
+    </span></th>
+                        <th data-type="string">City<span class="sort-icons">
+        <span class="up">▲</span>
+        <span class="down">▼</span>
+    </span></th>
+                        <th data-type="string">Pin<span class="sort-icons">
+        <span class="up">▲</span>
+        <span class="down">▼</span>
+    </span></th>
+                        <th data-type="string">Phone<span class="sort-icons">
+        <span class="up">▲</span>
+        <span class="down">▼</span>
+    </span></th>
+                        <th data-type="string">Trans type<span class="sort-icons">
+        <span class="up">▲</span>
+        <span class="down">▼</span>
+    </span></th>
+                        <th data-type="string">Vehicle no<span class="sort-icons">
+        <span class="up">▲</span>
+        <span class="down">▼</span>
+    </span></th>
+                        <th data-type="date">Valid date<span class="sort-icons">
+        <span class="up">▲</span>
+        <span class="down">▼</span>
+    </span></th>
+                        <th data-type="string">Carry out by<span class="sort-icons">
+        <span class="up">▲</span>
+        <span class="down">▼</span>
+    </span></th>
+                        <th data-type="string">Sec remark<span class="sort-icons">
+        <span class="up">▲</span>
+        <span class="down">▼</span>
+    </span></th>
+                        <th data-type="string">Prep by<span class="sort-icons">
+        <span class="up">▲</span>
+        <span class="down">▼</span>
+    </span></th>
+                        <th data-type="string">Dept code<span class="sort-icons">
+        <span class="up">▲</span>
+        <span class="down">▼</span>
+    </span></th>
+                        <th data-type="string">Email addr<span class="sort-icons">
+        <span class="up">▲</span>
+        <span class="down">▼</span>
+    </span></th>
+                        <th data-type="string">Dept cd metr<span class="sort-icons">
+        <span class="up">▲</span>
+        <span class="down">▼</span>
+    </span></th>
+                        <th data-type="string">Courier nm<span class="sort-icons">
+        <span class="up">▲</span>
+        <span class="down">▼</span>
+    </span></th>
+                        <th data-type="string">Docket no<span class="sort-icons">
+        <span class="up">▲</span>
+        <span class="down">▼</span>
+    </span></th>
+                        <th data-type="string">Conf by<span class="sort-icons">
+        <span class="up">▲</span>
+        <span class="down">▼</span>
+    </span></th>
+                        <th data-type="string">TC1<span class="sort-icons">
+        <span class="up">▲</span>
+        <span class="down">▼</span>
+    </span></th>
+                        <th data-type="string">TC2<span class="sort-icons">
+        <span class="up">▲</span>
+        <span class="down">▼</span>
+    </span></th>
+                        <th data-type="string">TC3<span class="sort-icons">
+        <span class="up">▲</span>
+        <span class="down">▼</span>
+    </span></th>
+                        <th data-type="string">TC4<span class="sort-icons">
+        <span class="up">▲</span>
+        <span class="down">▼</span>
+    </span></th>
+                        <th data-type="string">TC5<span class="sort-icons">
+        <span class="up">▲</span>
+        <span class="down">▼</span>
+    </span></th>
+                        <th data-type="string">TC6<span class="sort-icons">
+        <span class="up">▲</span>
+        <span class="down">▼</span>
+    </span></th>
+                        <th data-type="string">Cst tin no<span class="sort-icons">
+        <span class="up">▲</span>
+        <span class="down">▼</span>
+    </span></th>
+                        <th data-type="date">Cst tin date<span class="sort-icons">
+        <span class="up">▲</span>
+        <span class="down">▼</span>
+    </span></th>
+                        <th data-type="string">Vat tin no<span class="sort-icons">
+        <span class="up">▲</span>
+        <span class="down">▼</span>
+    </span></th>
+                        <th data-type="date">Vat tin date<span class="sort-icons">
+        <span class="up">▲</span>
+        <span class="down">▼</span>
+    </span></th>
+                        <th data-type="string">Ecc reg no<span class="sort-icons">
+        <span class="up">▲</span>
+        <span class="down">▼</span>
+    </span></th>
+<!--confirmed, site_code, gp_no, gp_date
+, gp_type, supp_code, supp_name, addr1, addr2, addr3, city, pin, phone
+, trans_type, vehicle_no, valid_date, carry_out_by, sec_remark, prep_by, dept_code, email_addr
+, dept_cd_metr, courier_nm, docket_no, conf_by, conf_date, tc1, tc2, tc3, tc4, tc5, tc6, cst_tin_no, cst_tin_date, vat_tin_no, vat_tin_date, ecc_reg_no 
+-->
+                    </tr>
+                </thead>
+
+                <tbody id="gatepassGridBody">
+        <!-- rows will be injected here -->
+    </tbody>
+            </table>
+            </div>
+        </div>
+        <!-- HEADER TAB (PUT YOUR HEADER FORM HERE) -->
+        <div id="headerTab" class="grid-container tab-content" style="display:none;">
+            <form class="header-form">
+            <div class="section">Gatepass Info</div>
+            <div class="row">
+                <label>Gatepass No</label>
+                <input type="text" id="gatepass_no" />
+                <label>Gatepass Date</label>
+                <input type="date" id="gatepass_date">
+<label>Gatepass Type</label>
+<div class="select-wrap"><select id="gatepass_type">
+    <option value="RETURNABLE">RETURNABLE</option>
+    <option value="NON RETURNABLE">NON RETURNABLE</option>
+</select></div>
+
+                <label>Site Code</label>
+                <input id="site_code">
+                <label> Type</label>
+                <div class="select-wrap"><select id="type" onchange="onTypeChange()">
+    <option value="OUTSIDE">OUTSIDE</option>
+    <option value="INTER UNIT">INTER UNIT</option>
+</select></div>
+            </div>
+            <div class="section">Supplier Details</div>
+            <div class="row">
+               <label>Supplier Code</label>
+               <div class="ac-wrap">
+                   <input id="supplier_code" autocomplete="off" placeholder="Type to search...">
+                   <div id="supplier_dropdown" class="ac-dropdown"></div>
+               </div>
+               <label>Supplier Name</label>
+               <input id="supplier_name" readonly>
+           </div>
+
+            <div class="row">
+               <label>Address 1</label>
+               <input id="addr1">
+               <label>Address 2</label>
+               <input id="addr2">
+               <label>Address 3</label>
+               <input id="addr3">
+            </div>
+
+            <div class="row">
+              <label>Supplier city</label>
+               <input id="city">
+              <label>Phone</label>
+                <input id="phone" inputmode="numeric" maxlength="15" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+            </div>
+
+            <div class="row">
+                <label>Pin Code</label>
+                <input id="pin" inputmode="numeric" maxlength="6" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+                <label>Email</label>
+                <input id="email">
+            </div>
+
+            <div class="section">Transport</div>
+            <div class="row">
+                <label>Material Dept.</label>
+<div style="display:flex; gap:2px; position:relative;">
+    <input id="material_dept" 
+           style="width:90px; flex:0 0 auto;" 
+           autocomplete="off" 
+           placeholder="Code"
+           oninput="filterDeptDropdown('material_dept','dept_metr_name','material_dept_dropdown', materialDeptList)">
+    <input id="dept_metr_name" readonly placeholder="Department Name" style="flex:1; background:#e6ebf5;">
+    <div id="material_dept_dropdown" class="ac-dropdown"></div>
+</div>
+                 <label>Vehicle No</label>
+                  <input id="vehicle_no">
+                  <label>Courier Name</label>
+                  <input id="Courier_name">
+                 <label>Transport Type</label>
+                 <div class="select-wrap"><select id="transport_type">
+    <option value="">-- SELECT --</option>
+    <option value="ROAD">ROAD</option>
+    <option value="COURIER">COURIER</option>
+    <option value="HAND">HAND</option>
+</select></div>
+                 <label>Due Date</label>
+                <input type="date" id="due_date">
+             </div>
+
+            <div class="row">
+                <label>Carry Out By</label>
+                  <input id="carryout_by">
+                <label>Security Remark</label>
+                  <input id="security_remark">
+                 <label>Prepared By</label>
+                  <input id="prepared_by">
+                    <label>Department Code</label>
+<div style="display:flex; gap:2px; position:relative;">
+    <input id="department_code" B002
+           style="width:90px; flex:0 0 auto;" 
+           autocomplete="off" 
+           placeholder="Code"
+           oninput="filterDeptDropdown('department_code','dept_code_name','dept_code_dropdown', deptCodeList)">
+    <input id="dept_code_name" readonly placeholder="Description" style="flex:1; background:#e6ebf5;">
+    <div id="dept_code_dropdown" class="ac-dropdown"></div>
+</div>
+            </div>
+
+            <div class="section">Terms and Conditions</div>
+               <div class="row">
+                    <label>T & C 1</label>
+                    <input id="term_1" >
+                    <label>T & C 2</label>
+                    <input id="term_2" >
+                    <label>T & C 3</label>
+                    <input id="term_3" >
+                    <label>T & C 4</label>
+                    <input id="term_4">
+                    <label>T & C 5</label>
+                    <input id="term_5">
+                    <label>T & C 6</label>
+                    <input id="term_6">
+               </div>
+            
+        </form>
+     </div>
+
+     <!-- DETAIL TAB -->
+<div id="detailTab" class="grid-container tab-content" style="display:none;">
+    <!-- GATEPASS SELECT AREA -->
+<div class="detail-gatepass-select" style="
+    padding: 6px 8px;
+    border-bottom: 1px solid #9aa8c7;
+    background: #f3f6fc;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+">
+
+    <label for="gatepassSelect" style="font-weight: 500;">
+        Gatepass No:
+    </label>
+
+    <select id="gatepassSelect" style="min-width: 180px;">
+    <option value="">-- Select Gatepass --</option>
+</select>
+
+</div>
+
+  <!-- TOP 60% : GRID -->
+  <div class="detail-grid">
+    <table id="detailTable">
+      <thead>
+        <tr>
+          <th>Sr</th>
+          <th>Item Code</th>
+          <th>Item Name</th>
+          <th>UOM</th>
+          <th>Qty</th>
+        </tr>
+      </thead>
+      <tbody id="detailBody">
+        <!-- rows from DB -->
+      </tbody>
+    </table>
+  </div>
+
+  <!-- BOTTOM 40% : FORM -->
+  <div class="detail-form">
+
+    <div class="section"> Item Info</div>
+
+    <div class="row">
+      <label>Serial No</label>
+      <input id="d_srno" readonly style="background:#e6ebf5;color:#374151;">
+      <label>Item Code</label>
+      <div style="display:flex; gap:2px; position:relative;">
+        <input id="d_item_code" autocomplete="off" placeholder="Code" style="width:90px; flex:0 0 auto;">
+        <input id="d_desc" readonly placeholder="Item Description" style="flex:1; background:#e6ebf5; color:#374151;">
+        <div id="item_dropdown" class="ac-dropdown"></div>
+      </div>
+    </div>
+
+    <div class="row">
+      <label>UOM</label>
+      <input id="d_uom" readonly style="background:#e6ebf5;color:#374151;">
+      <label>Quantity</label>
+      <input id="d_qty" type="number" min="0.001" step="any" placeholder="Enter qty > 0">
+    </div>
+
+    <div class="row">
+      <label>Machine Code</label>
+      <div class="ac-wrap" style="position:relative;">
+        <input id="d_machine" autocomplete="off" placeholder="Type to search...">
+        <div id="machine_dropdown" class="ac-dropdown"></div>
+      </div>
+    </div>
+
+    <div class="row">
+      <label>Repair Remark</label>
+      <div style="display:flex; flex-direction:column; gap:2px; flex:1;">
+        <textarea id="d_remark" maxlength="50" placeholder="Max 50 characters"
+          style="resize:none;"
+          oninput="
+            const len = this.value.length;
+            const ctr = document.getElementById('remark_counter');
+            ctr.textContent = len + '/50';
+            ctr.style.color = len >= 50 ? '#c00' : len >= 40 ? '#e67e00' : '#555';
+          "></textarea>
+        <span id="remark_counter" style="font-size:11px;color:#555;text-align:right;">0/50</span>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+    </div>
+
+</div>
+<script>
+  // ── Month Navigator: MON-YY display with up/down arrows ──
+  const MONTH_NAMES = ["JAN","FEB","MAR","APR","MAY","JUN",
+                       "JUL","AUG","SEP","OCT","NOV","DEC"];
+
+  let currentNavYear  = new Date().getFullYear();
+  let currentNavMonth = new Date().getMonth(); // 0-based
+
+  function renderMonthDisplay() {
+      const mon = MONTH_NAMES[currentNavMonth];
+      const yy  = String(currentNavYear).slice(-2);
+      document.getElementById("monthYearDisplay").textContent = mon + "-" + yy;
+  }
+
+  function changeMonth(delta) {
+      currentNavMonth += delta;
+      if (currentNavMonth > 11) { currentNavMonth = 0;  currentNavYear++; }
+      if (currentNavMonth < 0)  { currentNavMonth = 11; currentNavYear--; }
+      renderMonthDisplay();
+      loadGatepassGrid();
+  }
+
+  // Expose helpers used by loadGatepassGrid
+  function getSelectedYear()  { return currentNavYear; }
+  function getSelectedMonth() { return currentNavMonth + 1; } // 1-based for API
+
+  function formatDate(dateString) {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    const day   = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year  = date.getFullYear();
+    return `${day}/${month}/${year}`;
+  }
+
+  // Init display on load — handled in main DOMContentLoaded below
+</script>
+
+<script>
+        let currentTabIndex = 0;
+    let selectedGatepass = null;
+    let formMode = "view";
+const tabIds = ["gridTab", "headerTab", "detailTab"];
+
+// ── ADD GATEPASS ────────────────────────────────────────────
+async function addGatepass() {
+    // Always reset navigator to TODAY before adding
+    // Prevents March GP No being paired with today's (April) date
+    const _now = new Date();
+    currentNavYear  = _now.getFullYear();
+    currentNavMonth = _now.getMonth(); // 0-based
+    renderMonthDisplay();              // refresh the label shown in the left panel
+
+    // Fetch next GP number from server
+    try {
+        const siteCode = document.getElementById("siteCodeSelect").value || loggedInSiteCode;
+        const year     = getSelectedYear();   // now always today's year
+        const month    = getSelectedMonth();  // now always today's month
+        const res = await fetch(`/api/gatepass/next_gp_no?site_code=${siteCode}&year=${year}&month=${month}`);
+        const data = await res.json();
+        if (data.error) throw new Error(data.error);
+
+        clearHeaderForm();
+        setFormEditable();
+        await loadSupplierList();
+
+        // Auto-fill GP No
+        document.getElementById("gatepass_no").value = data.gp_no;
+        document.getElementById("gatepass_no").readOnly = true;
+
+        // Auto-fill today's date
+        const today = new Date().toISOString().split("T")[0];
+        document.getElementById("gatepass_date").value = today;
+
+        // Auto-fill due date (same as today by default)
+        document.getElementById("due_date").value = today;
+
+        // Default transport type = Road
+        document.getElementById("transport_type").value = "ROAD";
+
+        // Site code from the currently selected dropdown
+        document.getElementById("site_code").value = siteCode;
+
+        formMode = "add";
+        currentTabIndex = 1;
+        showTab("headerTab", 1);
+
+    } catch (err) {
+        alert("Error generating GP number: " + err.message);
+        console.error(err);
+    }
+}
+
+// ── COLLECT HEADER FORM → JSON ───────────────────────────────
+function collectHeaderData() {
+    return {
+        gp_no:        document.getElementById("gatepass_no").value.trim(),
+        gp_date:      document.getElementById("gatepass_date").value,
+        gp_type: encodeGpType(document.getElementById("gatepass_type").value, document.getElementById("type").value),
+        site_code:    document.getElementById("site_code").value.trim(),
+        supp_code:    document.getElementById("supplier_code").value.trim(),
+        supp_name:    document.getElementById("supplier_name").value.trim(),
+        addr1:        document.getElementById("addr1").value.trim(),
+        addr2:        document.getElementById("addr2").value.trim(),
+        addr3:        document.getElementById("addr3").value.trim(),
+        city:         document.getElementById("city").value.trim(),
+        phone:        document.getElementById("phone").value.trim(),
+        pin:          document.getElementById("pin").value.trim(),
+        email_addr:   document.getElementById("email").value.trim(),
+        dept_cd_metr: document.getElementById("material_dept").value.trim(),
+        vehicle_no:   document.getElementById("vehicle_no").value.trim(),
+        courier_nm:   document.getElementById("Courier_name").value.trim(),
+        trans_type:   document.getElementById("transport_type").value,
+        valid_date:   document.getElementById("due_date").value,
+        carry_out_by: document.getElementById("carryout_by").value.trim(),
+        sec_remark:   document.getElementById("security_remark").value.trim(),
+        dept_code:    document.getElementById("department_code").value.trim(),
+        tc1:          document.getElementById("term_1").value.trim(),
+        tc2:          document.getElementById("term_2").value.trim(),
+        tc3:          document.getElementById("term_3").value.trim(),
+        tc4:          document.getElementById("term_4").value.trim(),
+        tc5:          document.getElementById("term_5").value.trim(),
+        tc6:          document.getElementById("term_6").value.trim(),
+        gp_transit:   "",
+    };
+}
+
+async function nextTab() {
+
+    // GRID → HEADER (view mode): load existing header readonly
+    if (currentTabIndex === 0) {
+        if (formMode === "add") {
+            // Already in add mode, just switch tab
+            currentTabIndex = 1;
+            showTab("headerTab", 1);
+            return;
+        }
+        if (!selectedGatepass) {
+            alert("Please select a row first.");
+            return;
+        }
+        try {
+            const res = await fetch(`/api/gatepass/header?gp_no=${selectedGatepass.gp_no}`);
+            if (!res.ok) throw new Error("Failed to load header");
+            const data = await res.json();
+            loadHeaderData(data);
+            setFormReadonly();
+            formMode = "view";
+        } catch (err) {
+            alert("Error loading header data");
+            console.error(err);
+            return;
+        }
+    }
+
+    // HEADER → DETAIL
+    if (currentTabIndex === 1) {
+
+        // In add or edit mode → save header first
+        if (formMode === "add" || formMode === "edit") {
+            const headerData = collectHeaderData();
+
+            if (!headerData.gp_no) {
+                alert("GP No is missing. Cannot save.");
+                return;
+            }
+
+            try {
+                const res = await fetch("/api/gatepass/save_header", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(headerData)
+                });
+                const result = await res.json();
+                if (!res.ok || result.error) {
+                    alert("Error saving header: " + (result.error || "Unknown error"));
+                    return;
+                }
+
+                // Update selectedGatepass so detail tab knows the GP No
+                selectedGatepass = selectedGatepass || {};
+                selectedGatepass.gp_no = result.gp_no;
+
+                // Header saved silently — proceed to detail tab
+                
+
+            } catch (err) {
+                alert("Error saving header: " + err.message);
+                console.error(err);
+                return;
+            }
+        } else {
+            // view mode – just need selectedGatepass
+            if (!selectedGatepass) {
+                alert("Please select a Gatepass first.");
+                return;
+            }
+        }
+
+        const gpNo = selectedGatepass.gp_no;
+        const select = document.getElementById("gatepassSelect");
+        select.innerHTML = `<option value="${gpNo}">${gpNo}</option>`;
+        select.value = gpNo;
+        loadDetailData(gpNo);
+    }
+
+    if (currentTabIndex < tabIds.length - 1) {
+        currentTabIndex++;
+        showTab(tabIds[currentTabIndex], currentTabIndex);
+    }
+}
+
+// ── ADD NEW DETAIL ROW (clears bottom form for new entry) ────
+function addDetailRow() {
+    if (!selectedGatepass || !selectedGatepass.gp_no) {
+        alert("Please save the header first (click Next on the Header tab).");
+        return;
+    }
+    if (selectedGatepass.confirmed === 'Y') {
+        showSimpleModal("Cannot add to a confirmed Gatepass.");
+        return;
+    }
+
+    // Ensure detail form is enabled
+    setDetailFormEnabled(true);
+
+    // Calculate next Sr No from current GP's grid rows only
+    // If grid shows "No detail records found" placeholder, or is empty, start at 1
+    let nextSrNo = 1;
+    document.querySelectorAll("#detailBody tr").forEach(tr => {
+        const srCell = tr.cells[0];
+        if (srCell) {
+            const val = parseInt(srCell.textContent.trim());
+            if (!isNaN(val) && val >= nextSrNo) nextSrNo = val + 1;
+        }
+    });
+    // If d_srno already holds a value from the current session (e.g. post-save),
+    // use whichever is higher — guards against stale DOM from previous GP
+    const existingSr = parseInt(document.getElementById("d_srno").value);
+    if (!isNaN(existingSr) && existingSr > nextSrNo && currentDetailMode === "add") {
+        nextSrNo = existingSr;
+    }
+
+    // Clear all editable fields and show next Sr No
+    document.getElementById("d_srno").value      = nextSrNo;
+    document.getElementById("d_item_code").value  = "";
+    document.getElementById("d_uom").value        = "";
+    document.getElementById("d_qty").value         = "";
+    document.getElementById("d_machine").value    = "";
+    document.getElementById("d_desc").value        = "";
+    document.getElementById("d_remark").value      = "";
+    document.getElementById("remark_counter").textContent = "0/50";
+    document.getElementById("remark_counter").style.color = "#555";
+
+    // Remove highlight from grid rows
+    document.querySelectorAll("#detailBody tr").forEach(r => r.classList.remove("active-row"));
+
+    // Focus first editable field
+    document.getElementById("d_item_code").focus();
+
+    currentDetailMode = "add";
+}
+
+let currentDetailMode = "view";  // "add" | "edit" | "view"
+
+// ── SAVE DETAIL (OK button) ───────────────────────────────────
+async function saveDetail() {
+    // ── Guard: only work on Detail tab ──
+    if (currentTabIndex !== 2) {
+        return;  // silently do nothing if not on detail tab
+    }
+    if (!selectedGatepass || !selectedGatepass.gp_no) {
+        alert("No active Gatepass. Please save the header first.");
+        return;
+    }
+    if (selectedGatepass.confirmed === 'Y') {
+    showSimpleModal("Cannot save. Gatepass is confirmed.");
+    return;
+}
+
+    const srNoVal = document.getElementById("d_srno").value.trim();
+    const payload = {
+        gp_no:          selectedGatepass.gp_no,
+        sr_no:          srNoVal ? parseInt(srNoVal) : null,
+        item_code:      document.getElementById("d_item_code").value.trim(),
+        item_descr:     document.getElementById("d_desc").value.trim().substring(0, 50),
+        uom:            document.getElementById("d_uom").value.trim(),
+        quantity:       parseFloat(document.getElementById("d_qty").value) || 0,
+        item_descr_add: "",
+        rep_remark:     document.getElementById("d_remark").value.trim(),
+        mc_code:        document.getElementById("d_machine").value.trim(),
+    };
+
+    if (!payload.item_code) {
+        alert("Item Code is required.");
+        return;
+    }
+
+    // Repair remark: max 50 characters
+    if (payload.rep_remark.length > 50) {
+        alert("Repair Remark must not exceed 50 characters.");
+        document.getElementById("d_remark").focus();
+        return;
+    }
+
+    // Quantity validation: must not be blank and must be > 0
+    const qtyRaw = document.getElementById("d_qty").value.trim();
+    if (qtyRaw === "" || isNaN(parseFloat(qtyRaw)) || parseFloat(qtyRaw) <= 0) {
+        alert("Quantity is required and must be greater than 0.");
+        document.getElementById("d_qty").focus();
+        return;
+    }
+
+    try {
+        const res = await fetch("/api/gatepass/save_detail", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        });
+        const result = await res.json();
+        if (!res.ok || result.error) {
+            alert("Error saving detail: " + (result.error || "Unknown error"));
+            return;
+        }
+
+        // ── After save: prep form for next entry immediately ──
+        const nextSrNo = result.sr_no + 1;
+
+        // Clear all editable fields
+        document.getElementById("d_item_code").value = "";
+        document.getElementById("d_uom").value       = "";
+        document.getElementById("d_qty").value        = "";
+        document.getElementById("d_machine").value   = "";
+        document.getElementById("d_desc").value       = "";
+        document.getElementById("d_remark").value     = "";
+        document.getElementById("remark_counter").textContent = "0/50";
+        document.getElementById("remark_counter").style.color = "#555";
+
+        // Show next Sr No in readonly field
+        document.getElementById("d_srno").value = nextSrNo;
+
+        // Remove any grid row highlight
+        document.querySelectorAll("#detailBody tr").forEach(r => r.classList.remove("active-row"));
+
+        // Reload grid in background (no autoFill — form is already ready for next entry)
+        loadDetailData(selectedGatepass.gp_no, false);
+
+        currentDetailMode = "add";
+
+        // Focus item code so user can type next item straight away
+        document.getElementById("d_item_code").focus();
+
+    } catch (err) {
+        alert("Error saving detail: " + err.message);
+        console.error(err);
+    }
+}
+function prevTab() {
+    if (currentTabIndex > 0) {
+        currentTabIndex--;
+        showTab(tabIds[currentTabIndex], currentTabIndex);
+    }
+}//just added
+const tabs = document.querySelectorAll(".tab");
+
+//tabs[0].onclick = () => { currentTabIndex = 0; showTab("gridTab", 0); };
+//tabs[1].onclick = () => { currentTabIndex = 1; showTab("headerTab", 1); };
+//tabs[2].onclick = () => { currentTabIndex = 2; showTab("detailTab", 2); };
+
+function showTab(tabId, index) {
+    document.querySelectorAll(".tab-content")
+    .forEach(t => t.style.display = "none");
+
+const activeTab = document.getElementById(tabId);
+activeTab.style.display = "flex";   // NOT block
+
+
+    tabs.forEach(t => t.classList.remove("active"));
+    tabs[index].classList.add("active");
+
+    updateButtonStates(index);
+}
+
+// ── BUTTON STATE MANAGER ─────────────────────────────────────────
+// Detail-nav buttons: only enabled on Detail tab (index 2)
+const DETAIL_NAV_BTNS = ["btn-detail-edit", "btn-detail-ok", "btn-detail-add", "btn-detail-drop"];
+// Left-panel buttons disabled on Detail tab (except Refresh)
+const LEFT_PANEL_BTNS_NO_DETAIL = ["btn-lp-view","btn-lp-add","btn-lp-edit",
+                                    "btn-lp-drop","btn-lp-save","btn-lp-abort",
+                                    "btn-lp-confirm","btn-lp-cancel"];
+
+function setDisabled(btn, disabled) {
+    if (!btn) return;
+    btn.disabled = disabled;
+    btn.style.opacity = disabled ? "0.65" : "";
+    btn.style.cursor  = disabled ? "not-allowed" : "";
+}
+
+function updateButtonStates(tabIndex) {
+    const onDetail = tabIndex === 2;
+
+    DETAIL_NAV_BTNS.forEach(id => {
+        const btn = document.getElementById(id);
+        if (!btn) return;
+        // "Details Edit" enabled only when NOT already on detail tab (index != 2)
+        if (id === "btn-detail-edit") {
+            setDisabled(btn, onDetail);
+        } else {
+            setDisabled(btn, !onDetail);
+        }
+    });
+
+    // Left panel: refresh always enabled; rest disabled on detail tab
+    LEFT_PANEL_BTNS_NO_DETAIL.forEach(id => setDisabled(document.getElementById(id), onDetail));
+    // Refresh always enabled regardless of tab
+    setDisabled(document.getElementById("btn-lp-refresh"), false);
+
+    // Lock detail form fields when entering detail tab (until Add is pressed)
+    if (onDetail) {
+        setDetailFormEnabled(false);
+    }
+}
+
+function setDetailFormEnabled(enabled) {
+    const fields = document.querySelectorAll(
+        ".detail-form input:not([readonly]), .detail-form textarea, .detail-form select"
+    );
+    fields.forEach(f => {
+        f.disabled = !enabled;
+        if (!enabled) {
+            f.style.backgroundColor = "#e6ebf5";
+            f.style.color = "#9aa8c7";
+            f.style.cursor = "not-allowed";
+        } else {
+            f.style.backgroundColor = "";
+            f.style.color = "";
+            f.style.cursor = "";
+        }
+    });
+}
+function setHeaderMode(data, mode) {
+    const clean = val => (val || "").trim();
+
+    // gatepass_type and type are already set by loadHeaderData — don't overwrite them here
+    document.getElementById("transport_type").value = clean(data.trans_type);
+
+    const readonly = mode === "view";
+    ["gatepass_type", "transport_type", "type"].forEach(id => {
+        const el = document.getElementById(id);
+        if (readonly) el.classList.add("readonly-select");
+        else el.classList.remove("readonly-select");
+    });
+}
+
+// load header automatically
+function loadHeaderData(data) {
+    
+    // Reload supplier list to match this record's type (clears any stale list)
+    supplierList = [];
+
+    document.getElementById("gatepass_no").value = data.gp_no || "";
+if (data.gp_date) {
+    // API returns DD/MM/YYYY — convert to YYYY-MM-DD for type="date" input
+    const parts = String(data.gp_date).match(/(\d{2})\/(\d{2})\/(\d{4})/);
+    if (parts) document.getElementById("gatepass_date").value = `${parts[3]}-${parts[2]}-${parts[1]}`;
+}
+// Only restore the RETURNABLE / NON RETURNABLE dropdown
+// The qualifier (OUTSIDE / INTER UNIT) is display-only in print — not stored in DB
+const decoded = decodeGpType(data.gp_type);
+document.getElementById("gatepass_type").value = decoded.ret;
+// Do NOT restore "type" dropdown — qualifier is never saved, so nothing to restore
+    document.getElementById("site_code").value = data.site_code || "";
+    document.getElementById("supplier_code").value = data.supp_code || "";
+    document.getElementById("supplier_name").value = data.supp_name || "";
+    document.getElementById("addr1").value = data.addr1 || "";
+    document.getElementById("addr2").value = data.addr2 || "";
+    document.getElementById("addr3").value = data.addr3 || "";
+    document.getElementById("city").value = data.city || "";
+    document.getElementById("phone").value = data.phone || "";
+    document.getElementById("pin").value = data.pin || "";
+    document.getElementById("email").value = data.email_addr || "";
+    document.getElementById("vehicle_no").value = data.vehicle_no || "";
+    document.getElementById("transport_type").value = (data.trans_type || "").trim();
+    if (data.valid_date) {
+    const parts = String(data.valid_date).match(/(\d{2})\/(\d{2})\/(\d{4})/);
+    if (parts) document.getElementById("due_date").value = `${parts[3]}-${parts[2]}-${parts[1]}`;
+}
+    document.getElementById("carryout_by").value = data.carry_out_by || "";
+    document.getElementById("security_remark").value = data.sec_remark || "";
+    document.getElementById("prepared_by").value = data.prep_by || "";
+    document.getElementById("department_code").value = data.dept_code || "";
+    document.getElementById("term_1").value = data.tc1 || "";
+    document.getElementById("term_2").value = data.tc2 || "";
+    document.getElementById("term_3").value = data.tc3 || "";
+    document.getElementById("term_4").value = data.tc4 || "";
+    document.getElementById("term_5").value = data.tc5 || "";
+    document.getElementById("term_6").value = data.tc6 || "";
+
+    
+    console.log("gp_type:", data.gp_type);
+console.log("transport_type:", data.trans_type);
+console.log("type:", data.type);
+console.log(selectedGatepass);
+
+}
+
+
+
+function setFormReadonly() {
+    const fields = document.querySelectorAll(
+        "#headerTab input, #headerTab textarea, #headerTab select"
+    );
+
+    fields.forEach(f => {
+        if (f.tagName === "SELECT") {
+            f.classList.add("readonly-select");
+        } else {
+            f.readOnly = true;
+        }
+    });
+}
+
+function setFormEditable() {
+    const ALWAYS_READONLY = ["gatepass_no", "site_code", "gatepass_date"];
+    const fields = document.querySelectorAll(
+        "#headerTab input, #headerTab textarea, #headerTab select"
+    );
+
+    fields.forEach(f => {
+        if (f.tagName === "SELECT") {
+            f.classList.remove("readonly-select");
+            f.disabled = false;
+        } else {
+            if (ALWAYS_READONLY.includes(f.id)) {
+                f.readOnly = true;  // keep these always readonly
+            } else {
+                f.readOnly = false;
+            }
+        }
+    });
+}
+function openDetailTab() {
+    if (!selectedGatepass || !selectedGatepass.gp_no) {
+        alert("Please select a Gatepass record first.");
+        return;
+    }
+    const gpNo = selectedGatepass.gp_no;
+    const select = document.getElementById("gatepassSelect");
+    select.innerHTML = `<option value="${gpNo}">${gpNo}</option>`;
+    select.value = gpNo;
+    loadDetailData(gpNo);
+    currentTabIndex = 2;
+    showTab("detailTab", 2);
+}
+
+// LOADING DETAIL TAB
+function loadDetailData(gpNo, autoFill = true) {
+    const isConfirmed = selectedGatepass?.confirmed === 'Y';
+setDisabled(document.getElementById("btn-detail-add"), isConfirmed);
+setDisabled(document.getElementById("btn-detail-drop"), isConfirmed);
+setDisabled(document.getElementById("btn-detail-ok"), isConfirmed);
+
+    // Clear stale Sr No immediately so old GP's value never lingers
+    if (autoFill) {
+        document.getElementById("d_srno").value = "";
+        currentDetailMode = "view";
+    }
+
+    fetch(`/api/gatepass/details?gp_no=${gpNo}`)
+        .then(res => {
+            if (!res.ok) throw new Error("Failed to fetch details");
+            return res.json();
+        })
+        .then(rows => {
+
+            const tbody = document.getElementById("detailBody");
+            tbody.innerHTML = "";
+
+            if (rows.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="5" style="text-align:center;">
+                            No detail records found
+                        </td>
+                    </tr>`;
+
+                // New GP with no rows yet — init form ready for first entry at Sr No 1
+                if (autoFill) {
+                    document.getElementById("d_srno").value      = 1;
+                    document.getElementById("d_item_code").value  = "";
+                    document.getElementById("d_uom").value        = "";
+                    document.getElementById("d_qty").value         = "";
+                    document.getElementById("d_machine").value    = "";
+                    document.getElementById("d_desc").value        = "";
+                    document.getElementById("d_remark").value      = "";
+                    const ctr = document.getElementById("remark_counter");
+                    if (ctr) { ctr.textContent = "0/50"; ctr.style.color = "#555"; }
+                    currentDetailMode = "add";
+                    document.getElementById("d_item_code").focus();
+                }
+                return;
+            }
+
+            rows.forEach((r) => {
+
+                const tr = document.createElement("tr");
+
+                tr.innerHTML = `
+                    <td>${r.sr_no      ?? ""}</td>
+                    <td>${r.item_code  ?? ""}</td>
+                    <td>${r.item_descr ?? ""}</td>
+                    <td>${r.uom        ?? ""}</td>
+                    <td>${r.quantity   ?? ""}</td>
+                `;
+
+                // CLICK → LOAD BOTTOM FORM (enable form for editing immediately)
+                tr.addEventListener("click", function () {
+                    loadDetailForm(r);
+
+                    // Highlight selected row
+                    document.querySelectorAll("#detailBody tr")
+                        .forEach(row => row.classList.remove("active-row"));
+                    tr.classList.add("active-row");
+
+// Enable form only if GP is not confirmed
+if (selectedGatepass?.confirmed !== 'Y') {
+    setDetailFormEnabled(true);
+    currentDetailMode = "edit";
+}
+                });
+
+                tbody.appendChild(tr);
+            });
+
+            // Only auto-fill form when navigating to tab, not after a save
+            if (autoFill && rows.length > 0) {
+                loadDetailForm(rows[0]);
+                tbody.rows[0].classList.add("active-row");
+                // Enable form only if GP is not confirmed
+                if (selectedGatepass?.confirmed !== 'Y') {
+                    setDetailFormEnabled(true);
+                    currentDetailMode = "edit";
+                }
+            }
+
+        })
+        .catch(err => {
+            console.error(err);
+            alert("Error loading detail data");
+        });
+}
+
+//AUTO FILL DETAIL FIELDS
+function loadDetailForm(data) {
+
+    document.getElementById("d_srno").value     = data.sr_no      ?? "";
+    document.getElementById("d_item_code").value = data.item_code  ?? "";
+    document.getElementById("d_uom").value       = data.uom        ?? "";
+    document.getElementById("d_qty").value       = data.quantity   ?? data.qty ?? "";
+    document.getElementById("d_machine").value   = data.mc_code    ?? data.machine_code ?? "";
+    document.getElementById("d_desc").value      = data.item_descr ?? data.item_description ?? "";
+    const remarkVal = data.rep_remark ?? data.repair_remark ?? "";
+    document.getElementById("d_remark").value    = remarkVal;
+    const ctr = document.getElementById("remark_counter");
+    if (ctr) {
+        const len = remarkVal.length;
+        ctr.textContent = len + "/50";
+        ctr.style.color = len >= 50 ? "#c00" : len >= 40 ? "#e67e00" : "#555";
+    }
+}
+function dropGatepass() {
+    showSimpleModal("You are unauthorized. Please contact the I.T department.");
+}
+
+// ── DROP DETAIL ROW ───────────────────────────────────────────
+async function dropDetailRow() {
+    if (currentTabIndex !== 2) return;
+
+    if (!selectedGatepass || !selectedGatepass.gp_no) {
+        showSimpleModal("No active Gatepass. Please select a record first.");
+        return;
+    }
+    if (selectedGatepass.confirmed === 'Y') {
+    showSimpleModal("Cannot drop from a confirmed Gatepass.");
+    return;
+}
+
+    const srNoVal = document.getElementById("d_srno").value.trim();
+    if (!srNoVal || isNaN(parseInt(srNoVal))) {
+        showSimpleModal("Please select a detail row to drop.");
+        return;
+    }
+
+    const gpNo = selectedGatepass.gp_no;
+    const srNo = parseInt(srNoVal);
+
+    if (!confirm(`Drop Sr No ${srNo} from Gatepass ${gpNo}?`)) return;
+
+    try {
+        const res = await fetch("/api/gatepass/delete_detail", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ gp_no: gpNo, sr_no: srNo })
+        });
+        const result = await res.json();
+
+        if (!res.ok || result.error) {
+            showSimpleModal("Error dropping record: " + (result.error || "Unknown error"));
+            return;
+        }
+
+        // Clear the detail form
+        document.getElementById("d_srno").value      = "";
+        document.getElementById("d_item_code").value  = "";
+        document.getElementById("d_uom").value        = "";
+        document.getElementById("d_qty").value         = "";
+        document.getElementById("d_machine").value    = "";
+        document.getElementById("d_desc").value        = "";
+        document.getElementById("d_remark").value      = "";
+        const ctr = document.getElementById("remark_counter");
+        if (ctr) { ctr.textContent = "0/50"; ctr.style.color = "#555"; }
+
+        currentDetailMode = "view";
+
+        // Reload the detail grid
+        loadDetailData(gpNo, false);
+
+    } catch (err) {
+        showSimpleModal("Error dropping record: " + err.message);
+        console.error(err);
+    }
+}
+// ── GP TYPE encode / decode ──────────────────────────────────
+function resolveGpType(code) {
+    const d = decodeGpType(code);
+    return d.ret + " " + d.qual;
+}
+
+// REPLACE the whole encodeGpType function with this:
+function encodeGpType(returnability, qualifier) {
+    const r = (returnability || '').trim().toUpperCase();
+    if (r === 'NON RETURNABLE') return 'NON RETURNABLE';
+    return 'RETURNABLE'; // default
+}
+
+function decodeGpType(code) {
+    const map = {
+        "R-OUT":  { ret: "RETURNABLE",     qual: "OUTSIDE"    },
+        "R-IU":   { ret: "RETURNABLE",     qual: "INTER UNIT" },
+        "NR-OUT": { ret: "NON RETURNABLE", qual: "OUTSIDE"    },
+        "NR-IU":  { ret: "NON RETURNABLE", qual: "INTER UNIT" },
+        // legacy full strings still in DB — handled gracefully
+        "RETURNABLE OUTSIDE":        { ret: "RETURNABLE",     qual: "OUTSIDE"    },
+        "RETURNABLE INTER UNIT":     { ret: "RETURNABLE",     qual: "INTER UNIT" },
+        "NON RETURNABLE OUTSIDE":    { ret: "NON RETURNABLE", qual: "OUTSIDE"    },
+        "NON RETURNABLE INTER UNIT": { ret: "NON RETURNABLE", qual: "INTER UNIT" },
+        "RETURNABLE":                { ret: "RETURNABLE",     qual: "OUTSIDE"    },
+        "NON RETURNABLE":            { ret: "NON RETURNABLE", qual: "OUTSIDE"    },
+    };
+    return map[String(code || "").trim().toUpperCase()] || { ret: "RETURNABLE", qual: "OUTSIDE" };
+}
+</script>
+<script defer>
+   
+function loadGatepassGrid() {
+ // 🔥 CLEAR previous selection
+    selectedGatepass = null;
+    activeRowIndex = -1;
+    const siteCode =
+        document.getElementById("siteCodeSelect").value;
+
+    const year  = getSelectedYear();
+    const month = getSelectedMonth();
+
+    fetch(`/api/gatepass/list?site_code=${siteCode}&year=${year}&month=${month}`)
+        .then(res => {
+            if (!res.ok) throw new Error("Failed to fetch");
+            return res.json();
+        })
+        .then(rows => {
+            const tbody = document.getElementById("gatepassGridBody");
+            tbody.innerHTML = "";
+
+            if (rows.length === 0) {
+                tbody.innerHTML =
+                    `<tr>
+                        <td colspan="36" style="text-align:center;">
+                            No records found
+                        </td>
+                     </tr>`;
+                return;
+            }
+            rows.forEach(r => {
+                const tr = document.createElement("tr");
+                if (r.confirmed === 'Y') tr.classList.add("confirmed-row");
+                else if (r.confirmed === 'X') tr.classList.add("cancelled-row");
+
+                tr.innerHTML = `
+                    <td class="${r.confirmed === 'Y' ? 'confirmed-cell' : r.confirmed === 'X' ? 'cancelled-cell' : ''}"> ${r.confirmed ?? ""}</td>
+                    <td>${r.site_code ?? ""}</td>
+                    <td>${r.gp_no ?? ""}</td>
+                    <td>${formatDate(r.gp_date)}</td>
+                    <td>${resolveGpType(r.gp_type)}</td>
+                    <td>${r.supp_code ?? ""}</td>
+                    <td>${r.supp_name ?? ""}</td>
+                    <td>${r.addr1 ?? ""}</td>
+                    <td>${r.addr2 ?? ""}</td>
+                    <td>${r.addr3 ?? ""}</td>
+                    <td>${r.city ?? ""}</td>
+                    <td>${r.pin ?? ""}</td>
+                    <td>${r.phone ?? ""}</td>
+                    <td>${r.trans_type ?? ""}</td>
+                    <td>${r.vehicle_no ?? ""}</td>
+                    <td>${formatDate(r.valid_date)}</td>
+                    <td>${r.carry_out_by ?? ""}</td>
+                    <td>${r.sec_remark ?? ""}</td>
+                    <td>${r.prep_by ?? ""}</td>
+                    <td>${r.dept_code ?? ""}</td>
+                    <td>${r.email_addr ?? ""}</td>
+                    <td>${r.dept_cd_metr ?? ""}</td>
+                    <td>${r.courier_nm ?? ""}</td>
+                    <td>${r.docket_no ?? ""}</td>
+                    <td>${r.conf_by ?? ""}</td>
+                    <td>${r.tc1 ?? ""}</td>
+                    <td>${r.tc2 ?? ""}</td>
+                    <td>${r.tc3 ?? ""}</td>
+                    <td>${r.tc4 ?? ""}</td>
+                    <td>${r.tc5 ?? ""}</td>
+                    <td>${r.tc6 ?? ""}</td>
+                    <td>${r.cst_tin_no ?? ""}</td>
+                    <td>${formatDate(r.cst_tin_date)}</td>
+                    <td>${r.vat_tin_no ?? ""}</td>
+                    <td>${formatDate(r.vat_tin_date)}</td>
+                    <td>${r.ecc_reg_no ?? ""}</td>
+                `;
+
+                tbody.appendChild(tr);
+                // Hover highlighting
+  tr.addEventListener("mouseenter", function () {
+    if (!keyboardMode) {   // only if user is not navigating with keyboard
+        setActiveRow(this.rowIndex - 1, false); // no scroll on hover
+    }
+});
+
+// Click sets keyboard mode
+tr.addEventListener("click", function (e) {
+    keyboardMode = true;
+    setActiveRow(this.rowIndex - 1, true);
+    // Store full row data object
+    selectedGatepass = r;
+    // Populate search box with clicked cell content only — no filtering until Search button clicked
+    const clickedCell = e.target.closest("td");
+    if (clickedCell) {
+        const cellText = clickedCell.textContent.trim();
+        if (cellText) {
+            document.getElementById("searchInput").value = cellText;
+        }
+    }
+});
+tr.addEventListener("dblclick", function () {
+    viewGatepass();
+})
+            });
+//searching
+        })
+}// end loadGatepassGrid
+
+window.addEventListener("DOMContentLoaded", async () => {
+    await loadSiteCodes();
+    await loadDeptLists();
+    loadGatepassGrid();
+    loadItemList();
+    loadMachineList();
+
+    // Initialize button states for starting tab (grid = index 0)
+    updateButtonStates(0);
+
+    // Date inputs: open calendar picker on any click anywhere in the field
+    document.querySelectorAll("input[type='date']").forEach(input => {
+        input.addEventListener("click", function () {
+            if (!this.readOnly && !this.disabled) {
+                try { this.showPicker(); } catch(e) {}
+            }
+        });
+    });
+
+    // Search — only fires on Search button click or Enter key in search box
+    function runSearch() {
+        const filter = document.getElementById("searchInput").value.toLowerCase();
+        const tbody = table.tBodies[0];
+        Array.from(tbody.querySelectorAll("tr")).forEach(row => {
+            row.style.display = Array.from(row.cells)
+                .some(td => td.textContent.toLowerCase().includes(filter))
+                ? "" : "none";
+        });
+    }
+    document.getElementById("searchBtn").addEventListener("click", runSearch);
+    document.getElementById("searchInput").addEventListener("keydown", function (e) {
+        if (e.key === "Enter") runSearch();
+    });
+
+    // Supplier autocomplete wiring
+    const input = document.getElementById("supplier_code");
+
+    input.addEventListener("focus", async function () {
+        // Load & cache full list on first focus for this type
+        await loadSupplierList();
+        const q = this.value.toLowerCase().trim();
+        const filtered = q
+            ? supplierList.filter(s =>
+                s.code.toLowerCase().includes(q) ||
+                s.name.toLowerCase().includes(q))
+            : supplierList;
+        openAcDropdown(filtered);
+    });
+
+    input.addEventListener("input", function () {
+        const q = this.value.trim();
+
+        // Instant local filter if cache is loaded
+        if (supplierList.length) {
+            const ql = q.toLowerCase();
+            const filtered = ql
+                ? supplierList.filter(s =>
+                    s.code.toLowerCase().includes(ql) ||
+                    s.name.toLowerCase().includes(ql))
+                : supplierList;
+            openAcDropdown(filtered);
+        }
+
+        // Debounced server search (300 ms) — catches cases where cache isn't ready
+        clearTimeout(supplierSearchTimer);
+        if (q.length >= 1) {
+            supplierSearchTimer = setTimeout(() => searchSupplierServer(q), 300);
+        }
+    });
+
+    input.addEventListener("keydown", function (e) {
+        const dd = document.getElementById("supplier_dropdown");
+        const items = dd.querySelectorAll(".ac-item");
+        if (e.key === "ArrowDown") {
+            e.preventDefault();
+            acActiveIndex = Math.min(acActiveIndex + 1, items.length - 1);
+            highlightAcItem(acActiveIndex);
+        } else if (e.key === "ArrowUp") {
+            e.preventDefault();
+            acActiveIndex = Math.max(acActiveIndex - 1, 0);
+            highlightAcItem(acActiveIndex);
+        } else if (e.key === "Enter") {
+            e.preventDefault();
+            if (acActiveIndex >= 0 && items[acActiveIndex]) {
+                items[acActiveIndex].dispatchEvent(new Event("mousedown"));
+            }
+        } else if (e.key === "Escape") {
+            closeAcDropdown();
+        }
+    });
+
+    input.addEventListener("blur", function () {
+        setTimeout(closeAcDropdown, 150);
+    });
+
+    // Month display init
+    renderMonthDisplay();
+});
+
+
+// ✅ Reload when site changes
+document.getElementById("siteCodeSelect").addEventListener("change", function () {
+     document.getElementById("searchInput").value = "";
+    loadGatepassGrid();
+});
+// Manual sorting
+const table = document.getElementById("gatepassTable");
+const ths = table.querySelectorAll("th");
+
+ths.forEach((th, index) => {
+
+    let asc = true;
+
+    th.addEventListener("click", () => {
+
+        const type = th.getAttribute("data-type");
+        const tbody = table.tBodies[0];
+        const rows = Array.from(tbody.querySelectorAll("tr"));
+
+        rows.sort((a, b) => {
+
+            let aText = a.cells[index].textContent.trim();
+            let bText = b.cells[index].textContent.trim();
+
+            if (type === "date") {
+                const [ad, am, ay] = aText.split("/");
+                const [bd, bm, by] = bText.split("/");
+
+                const aDate = new Date(`${ay}-${am}-${ad}`);
+                const bDate = new Date(`${by}-${bm}-${bd}`);
+
+                return asc ? aDate - bDate : bDate - aDate;
+            }
+
+            if (type === "number") {
+                return asc
+                    ? parseFloat(aText) - parseFloat(bText)
+                    : parseFloat(bText) - parseFloat(aText);
+            }
+
+            return asc
+                ? aText.localeCompare(bText)
+                : bText.localeCompare(aText);
+        });
+
+        rows.forEach(r => tbody.appendChild(r));
+
+        // 🔥 Hide all arrows first
+        document.querySelectorAll(".sort-icons .up, .sort-icons .down")
+            .forEach(icon => icon.style.display = "none");
+
+        const icons = th.querySelector(".sort-icons");
+
+        if (asc) {
+            icons.querySelector(".up").style.display = "inline";
+        } else {
+            icons.querySelector(".down").style.display = "inline";
+        }
+
+        asc = !asc;
+    });
+
+});
+
+function resetSortIcons() {
+    document.querySelectorAll(".sort-icons .up, .sort-icons .down")
+        .forEach(icon => icon.style.display = "none");
+}
+function refreshGatepass() {
+
+    // Reset transaction state
+    formMode = "view";
+    selectedGatepass = null;
+    activeRowIndex = -1;
+
+    // Always go back to Grid tab
+    currentTabIndex = 0;
+    showTab("gridTab", 0);
+
+    // Reload grid from backend
+    loadGatepassGrid();
+}
+
+async function viewGatepass() {
+
+    if (!selectedGatepass) {
+        alert("Please select a Gatepass first.");
+        return;
+    }
+
+    const gpNo = selectedGatepass.gp_no;
+
+    try {
+        const res = await fetch(`/api/gatepass/header?gp_no=${gpNo}`);
+
+        if (!res.ok) {
+            throw new Error("Failed to load header");
+        }
+
+        const data = await res.json();
+
+        loadHeaderData(data);
+        setFormReadonly();
+
+        formMode = "view";
+        currentTabIndex = 1;
+        showTab(tabIds[currentTabIndex], currentTabIndex);
+
+    } catch (err) {
+        alert("Error loading header data");
+        console.error(err);
+    }
+}
+function clearHeaderForm() {
+    const inputs = document.querySelectorAll("#headerTab input, #headerTab textarea");
+    inputs.forEach(input => input.value = "");
+}
+
+// ── SUPPLIER AUTOCOMPLETE ─────────────────────────────────────
+// ── SUPPLIER: per-type cache + debounced server search ──────────
+let supplierCache = {};   // { "OUTSIDE": [...], "INTER UNIT": [...] }
+let supplierList  = [];   // active list for keyboard nav
+let acActiveIndex = -1;
+let supplierSearchTimer = null;
+
+async function onTypeChange() {
+    clearSupplierFields();
+    // Clear cache for fresh load when type switches
+    supplierCache = {};
+    supplierList  = [];
+}
+
+// Load full list for a type once, then cache it
+async function loadSupplierList() {
+    const type = document.getElementById("type").value;
+    if (!type) return;
+    if (supplierCache[type]) {
+        supplierList = supplierCache[type];
+        return;
+    }
+    try {
+        const res = await fetch(`/api/supplier/list?type=${encodeURIComponent(type)}`);
+        if (!res.ok) throw new Error("Failed to load supplier list");
+        supplierCache[type] = await res.json();
+        supplierList = supplierCache[type];
+    } catch (err) {
+        console.error("Supplier list error:", err);
+        supplierList = [];
+    }
+}
+
+// Server-side search: fetches only matching rows — fast even for large tables
+async function searchSupplierServer(q) {
+    const type = document.getElementById("type").value;
+    if (!type) return;
+    try {
+        const url = `/api/supplier/list?type=${encodeURIComponent(type)}&q=${encodeURIComponent(q)}`;
+        const res = await fetch(url);
+        if (!res.ok) return;
+        supplierList = await res.json();
+        openAcDropdown(supplierList);
+    } catch (err) {
+        console.error("Supplier search error:", err);
+    }
+}
+
+function clearSupplierFields() {
+    ["supplier_code","supplier_name","addr1","addr2","addr3","city","phone","pin","email"]
+        .forEach(id => { document.getElementById(id).value = ""; });
+    closeAcDropdown();
+}
+
+function fillSupplierFields(item) {
+    document.getElementById("supplier_code").value = item.code  || "";
+    document.getElementById("supplier_name").value = item.name  || "";
+    document.getElementById("addr1").value         = item.addr1 || "";
+    document.getElementById("addr2").value         = item.addr2 || "";
+    document.getElementById("addr3").value         = item.addr3 || "";
+    document.getElementById("city").value          = item.city  || "";
+    document.getElementById("phone").value         = item.phone || "";
+    document.getElementById("pin").value           = item.pin   || "";
+    document.getElementById("email").value         = item.email || "";
+    closeAcDropdown();
+}
+
+function openAcDropdown(items) {
+    const dd = document.getElementById("supplier_dropdown");
+    dd.innerHTML = "";
+    acActiveIndex = -1;
+    if (!items.length) { dd.classList.remove("open"); return; }
+    items.slice(0, 80).forEach(item => {
+        const div = document.createElement("div");
+        div.className = "ac-item";
+        div.textContent = `${item.code}  —  ${item.name}`;
+        div.addEventListener("mousedown", function (e) {
+            e.preventDefault();
+            fillSupplierFields(item);
+        });
+        dd.appendChild(div);
+    });
+    dd.classList.add("open");
+}
+
+function closeAcDropdown() {
+    const dd = document.getElementById("supplier_dropdown");
+    if (dd) dd.classList.remove("open");
+    acActiveIndex = -1;
+}
+
+function highlightAcItem(index) {
+    const dd = document.getElementById("supplier_dropdown");
+    const items = dd.querySelectorAll(".ac-item");
+    items.forEach(el => el.classList.remove("active"));
+    if (index >= 0 && index < items.length) {
+        items[index].classList.add("active");
+        items[index].scrollIntoView({ block: "nearest" });
+    }
+}
+
+//pop up
+// Simple function to show the modal
+function showSimpleModal(message) {
+    const modal = document.getElementById("simpleModal");
+    const modalMessage = document.getElementById("simpleModalMessage");
+
+    modalMessage.textContent = message;
+    modal.style.display = "flex";
+const closeBtn = document.getElementById("simpleModalClose");
+const okBtn = document.getElementById("simpleModalOk");
+
+// Close on X
+closeBtn.onclick = function () {
+    modal.style.display = "none";
+};
+
+// Close on OK button
+okBtn.onclick = function () {
+    modal.style.display = "none";
+};
+
+// Close when clicking outside modal content
+modal.onclick = function (event) {
+    if (event.target === modal) {
+        modal.style.display = "none";
+    }
+};
+
+}
+
+
+// edit logic
+async function editGatepass() {
+    if (!selectedGatepass) {
+        alert("Please select a row first");
+        return;
+    }
+
+    const status = selectedGatepass.confirmed; // Ensure you're getting the correct status field
+    
+    if (status === "Y" || status === "X") {
+        // Show simple popup with error message
+        showSimpleModal("You cannot edit a confirmed or cancelled gatepass.");
+        return;
+    }
+
+    // If the order is unconfirmed (status 'N'), allow editing
+    if (status === "N") {
+        formMode = "edit";
+        const res = await fetch(`/api/gatepass/header?gp_no=${selectedGatepass.gp_no}`);
+        const data = await res.json();
+loadHeaderData(data);
+        setFormEditable();
+        currentTabIndex = 1;
+        showTab("headerTab", 1);
+        document.getElementById("gatepass_no").readOnly = true;
+        document.getElementById("site_code").readOnly = true;
+        document.getElementById("gatepass_date").readOnly = true;
+    }
+}
+function abortGatepass() {
+
+    // If in add mode → clear form and go back
+    if (formMode === "add") {
+        clearHeaderForm();
+        formMode = "view";
+        showTab("gridTab", 0);
+        return;
+    }
+
+    // If in edit mode → reload original data
+    if (formMode === "edit" && selectedGatepass) {
+        loadHeaderData(selectedGatepass);
+        setFormReadonly();
+        formMode = "view";
+        showTab("gridTab", 0);
+        return;
+    }
+
+    // If already in view mode
+    showTab("gridTab", 0);
+}
+
+// ── CONFIRM GATEPASS (sets confirmed = 'Y') ───────────────────
+async function confirmGatepass() {
+    if (!selectedGatepass) { alert("Please select a Gatepass first."); return; }
+    if (selectedGatepass.confirmed === "Y") { showSimpleModal("This Gatepass is already confirmed."); return; }
+    if (selectedGatepass.confirmed === "X") { showSimpleModal("Cannot confirm a cancelled Gatepass."); return; }
+    if (!confirm(`Confirm Gatepass ${selectedGatepass.gp_no}?`)) return;
+    try {
+        const res = await fetch("/api/gatepass/confirm", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ gp_no: selectedGatepass.gp_no, status: "Y" })
+        });
+        const result = await res.json();
+        if (!res.ok || result.error) { alert("Error: " + (result.error || "Unknown error")); return; }
+        selectedGatepass.confirmed = "Y";
+        updateGridRowStatus(selectedGatepass.gp_no, "Y");
+    } catch (err) { alert("Error confirming: " + err.message); }
+}
+
+// ── CANCEL GATEPASS (sets confirmed = 'X') ────────────────────
+async function cancelGatepass() {
+    if (!selectedGatepass) { alert("Please select a Gatepass first."); return; }
+    if (selectedGatepass.confirmed === "X") { showSimpleModal("This Gatepass is already cancelled."); return; }
+    if (selectedGatepass.confirmed === "Y") { showSimpleModal("Cannot cancel a confirmed Gatepass."); return; }
+    if (!confirm(`Cancel Gatepass ${selectedGatepass.gp_no}?`)) return;
+    try {
+        const res = await fetch("/api/gatepass/confirm", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ gp_no: selectedGatepass.gp_no, status: "X" })
+        });
+        const result = await res.json();
+        if (!res.ok || result.error) { alert("Error: " + (result.error || "Unknown error")); return; }
+        selectedGatepass.confirmed = "X";
+        updateGridRowStatus(selectedGatepass.gp_no, "X");
+    } catch (err) { alert("Error cancelling: " + err.message); }
+}
+
+// ── UPDATE GRID ROW STATUS CELL WITHOUT FULL RELOAD ──────────
+function updateGridRowStatus(gpNo, status) {
+    const tbody = document.getElementById("gatepassGridBody");
+    Array.from(tbody.rows).forEach(row => {
+        // gp_no is column index 2
+        if (row.cells[2] && row.cells[2].textContent.trim() === gpNo) {
+            const cell = row.cells[0]; // confirmed = col 0
+            cell.textContent = status;
+            cell.className = status === "Y" ? "confirmed-cell"
+                           : status === "X" ? "cancelled-cell" : "";
+        }
+    });
+}
+
+async function loadGatepassDropdown() {
+    const siteCode = document.getElementById("siteCodeSelect").value;
+    const gpDate = document.getElementById("gpDate").value;
+
+    try {
+        const res = await fetch(`/api/gatepass/numbers?site_code=${siteCode}&gp_date=${gpDate}`);
+        if (!res.ok) throw new Error("Failed to fetch gatepass numbers");
+
+        const gpNumbers = await res.json();
+        const dropdown = document.getElementById("gatepassSelect");
+
+        // Clear existing except first
+        dropdown.length = 1;
+
+        gpNumbers.forEach(gp => {
+            const option = document.createElement("option");
+            option.value = gp;
+            option.textContent = gp;
+            dropdown.appendChild(option);
+        });
+
+        // Auto-select current selectedGatepass
+        if (selectedGatepass) {
+            dropdown.value = selectedGatepass.gp_no;
+        } else if (gpNumbers.length > 0) {
+            dropdown.value = gpNumbers[0]; // first GP as default
+            // Load detail data for first GP
+            loadDetailData(dropdown.value);
+        }
+
+    } catch (err) {
+        console.error(err);
+        alert("Error loading Gatepass numbers");
+    }
+}
+</script>
+<script>
+// Column min-widths for gatepass grid (index → px)
+const GP_COL_WIDTHS = {
+    0: 80,   // Confirmed
+    1: 80,   // Site code
+    2: 110,  // Gp no
+    3: 90,   // Gp date
+    4: 120,  // Gp type
+    5: 90,   // Supp code
+    6: 160,  // Supp name
+    7: 120,  // Addr1
+    8: 100,  // Addr2
+    9: 100,  // Addr3
+    10: 90,  // City
+    11: 70,  // Pin
+    12: 100, // Phone
+    13: 110, // Trans type
+    14: 100, // Vehicle no
+};
+
+function makeTableResizable(tableSelector) {
+    const table = document.querySelector(tableSelector);
+    if (!table) return;
+
+    const ths = table.querySelectorAll("th");
+    const isGatepass = tableSelector === "#gatepassTable";
+
+    ths.forEach((th, idx) => {
+        // Skip if resizer already exists (prevents duplicates)
+        if (th.querySelector(".resizer")) return;
+
+        const resizer = document.createElement("div");
+        resizer.classList.add("resizer");
+        th.appendChild(resizer);
+
+        let startX, startWidth;
+
+        resizer.addEventListener("mousedown", function (e) {
+            startX = e.pageX;
+            startWidth = th.offsetWidth;
+
+            document.addEventListener("mousemove", resizeColumn);
+            document.addEventListener("mouseup", stopResize);
+        });
+
+        function resizeColumn(e) {
+            const newWidth = startWidth + (e.pageX - startX);
+            th.style.width = newWidth + "px";
+        }
+
+        function stopResize() {
+            document.removeEventListener("mousemove", resizeColumn);
+            document.removeEventListener("mouseup", stopResize);
+        }
+
+        // Set initial width
+        if (isGatepass && GP_COL_WIDTHS[idx]) {
+            th.style.width = GP_COL_WIDTHS[idx] + "px";
+        } else {
+            const natural = Math.max(th.scrollWidth, 70);
+            th.style.width = natural + "px";
+        }
+    });
+}
+document.addEventListener("DOMContentLoaded", function () {
+    // Make gatepass grid resizable
+    makeTableResizable("#gatepassTable");
+
+    // Make detail table resizable
+    makeTableResizable("#detailTable");
+});
+// ── DEPT AUTOCOMPLETE STATE ───────────────────────────────────
+let materialDeptList = [];   // all departments
+let deptCodeList     = [];   // employee-filtered departments
+
+// ── LOAD BOTH LISTS ON PAGE READY ────────────────────────────
+async function loadDeptLists() {
+    try {
+        // 1. Material Dept — all departments
+        const r1 = await fetch("/api/department/list");
+        if (r1.ok) materialDeptList = await r1.json();
+
+        // 2. Department Code — filtered by logged-in employee
+        const empCode = loggedInEmpCode;   // see note below
+        if (empCode) {
+            const r2 = await fetch(`/api/department/by_employee?emp_code=${empCode}`);
+            if (r2.ok) deptCodeList = await r2.json();
+        }
+    } catch (err) {
+        console.error("Dept list error:", err);
+    }
+}
+
+// ── SHARED FILTER + DROPDOWN RENDERER ────────────────────────
+function filterDeptDropdown(codeId, nameId, dropdownId, list) {
+    const input   = document.getElementById(codeId);
+    const dd      = document.getElementById(dropdownId);
+    const q       = input.value.toLowerCase().trim();
+
+    const filtered = q
+        ? list.filter(d =>
+            d.dept_code.toLowerCase().includes(q) ||
+            (d.department || d.description || "").toLowerCase().includes(q))
+        : list;
+
+    renderDeptDropdown(filtered, codeId, nameId, dropdownId, list);
+}
+
+function renderDeptDropdown(items, codeId, nameId, dropdownId, fullList) {
+    const dd = document.getElementById(dropdownId);
+    dd.innerHTML = "";
+
+    if (!items.length) {
+        dd.classList.remove("open");
+        return;
+    }
+
+    items.slice(0, 80).forEach(item => {
+        const label = item.department || item.description || "";
+        const div   = document.createElement("div");
+        div.className   = "ac-item";
+        div.textContent = `${item.dept_code}  —  ${label}`;
+
+        div.addEventListener("mousedown", function (e) {
+            e.preventDefault();
+            document.getElementById(codeId).value = item.dept_code;
+            document.getElementById(nameId).value  = label;
+            dd.classList.remove("open");
+        });
+
+        dd.appendChild(div);
+    });
+
+    dd.classList.add("open");
+}
+
+// ── CLOSE DROPDOWN ON BLUR ────────────────────────────────────
+["material_dept", "department_code"].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+
+    el.addEventListener("focus", function () {
+        const isMat = id === "material_dept";
+        const list  = isMat ? materialDeptList : deptCodeList;
+        const ddId  = isMat ? "material_dept_dropdown" : "dept_code_dropdown";
+        const nmId  = isMat ? "dept_metr_name"         : "dept_code_name";
+        renderDeptDropdown(list, id, nmId, ddId, list);
+    });
+
+    el.addEventListener("blur", function () {
+        const ddId = id === "material_dept"
+            ? "material_dept_dropdown"
+            : "dept_code_dropdown";
+        setTimeout(() => {
+            document.getElementById(ddId).classList.remove("open");
+        }, 150);
+    });
+});
+</script>
+<script>
+let activeRowIndex = -1;
+let keyboardMode = false;
+
+function setActiveRow(index, scroll = false) {
+    const table = document.getElementById("gatepassTable");
+    const rows = table.tBodies[0].rows;
+
+    if (!rows.length) return;
+
+    if (index < 0) index = 0;
+    if (index >= rows.length) index = rows.length - 1;
+
+    Array.from(rows).forEach(r => r.classList.remove("active-row"));
+
+    activeRowIndex = index;
+    const activeRow = rows[activeRowIndex];
+    activeRow.classList.add("active-row");
+
+    if (scroll) {
+        const container = table.parentElement; // scrollable div around table
+        const headerHeight = table.tHead.offsetHeight; // height of fixed header
+
+        const rowTop = activeRow.offsetTop;
+        const rowBottom = rowTop + activeRow.offsetHeight;
+        const containerScrollTop = container.scrollTop;
+        const containerHeight = container.clientHeight;
+
+        if (rowTop < containerScrollTop + headerHeight) {
+            // Scroll up so row is visible below header
+            container.scrollTop = rowTop - headerHeight;
+        } else if (rowBottom > containerScrollTop + containerHeight) {
+            // Scroll down minimally
+            container.scrollTop = rowBottom - containerHeight;
+        }
+    }
+}
+
+</script>
+<script>
+document.addEventListener("keydown", function (e) {
+
+    if (activeRowIndex === -1) return;
+
+    if (e.key === "ArrowDown") {
+        setActiveRow(activeRowIndex + 1, true);
+        e.preventDefault();
+    }
+
+    if (e.key === "ArrowUp") {
+        setActiveRow(activeRowIndex - 1, true);
+        e.preventDefault();
+    }
+});
+</script>
+
+<script>
+    const loggedInSiteCode = "{{ site_code }}";
+    const loggedInEmpCode  = "{{ emp_code }}";
+</script>
+
+<!-- LOADING SITE CODE FOR SITECODE DROPDOWN-->
+<script>
+async function loadSiteCodes() {
+    try {
+        const res = await fetch("/api/sitecodes");
+
+        if (!res.ok)
+            throw new Error("Failed to fetch site codes");
+
+        const data = await res.json();
+
+        const dropdown =
+            document.getElementById("siteCodeSelect");
+
+        // clear except first option
+        dropdown.length = 1;
+
+        data.forEach(site => {
+            const opt = document.createElement("option");
+            opt.value = site.site_code;
+            opt.textContent = site.site_code;
+            
+            // ✅ Auto-select logged in site code
+            if (site.site_code === loggedInSiteCode) {
+                opt.selected = true;
+            }
+            dropdown.appendChild(opt);
+        });
+
+    } catch (err) {
+        console.error(err);
+        alert("Error loading site codes");
+    }
+}
+
+
+</script>
+<!-- Modal Structure -->
+<div id="simpleModal" class="simple-modal">
+    <div class="simple-modal-content">
+        <span id="simpleModalClose" class="simple-modal-close">&times;</span>
+        
+        <p id="simpleModalMessage"></p>
+
+        <div style="text-align:center; margin-top:15px;">
+            <button id="simpleModalOk" class="modal-ok-btn">OK</button>
+        </div>
+    </div>
+</div>
+<!-- ITEM & MACHINE AUTOCOMPLETE FOR DETAIL TAB -->
+<script>
+// ── ITEM AUTOCOMPLETE ─────────────────────────────────────────
+let itemList = [];
+
+async function loadItemList() {
+    if (itemList.length) return;
+    try {
+        const res = await fetch("/api/item/list");
+        if (res.ok) itemList = await res.json();
+    } catch (err) {
+        console.error("Item list error:", err);
+    }
+}
+
+function openItemDropdown(filtered) {
+    const dd = document.getElementById("item_dropdown");
+    dd.innerHTML = "";
+    if (!filtered.length) { dd.classList.remove("open"); return; }
+
+    filtered.slice(0, 80).forEach(item => {
+        const div = document.createElement("div");
+        div.className = "ac-item";
+        div.textContent = `${item.item_code}  —  ${item.descr}`;
+        div.addEventListener("mousedown", function (e) {
+            e.preventDefault();
+            document.getElementById("d_item_code").value = item.item_code;
+            document.getElementById("d_desc").value      = item.descr;
+            document.getElementById("d_uom").value       = item.unit;
+            dd.classList.remove("open");
+            document.getElementById("d_qty").focus();
+        });
+        dd.appendChild(div);
+    });
+    dd.classList.add("open");
+}
+
+// Wire item code input
+document.addEventListener("DOMContentLoaded", function () {
+    const itemInput = document.getElementById("d_item_code");
+
+    itemInput.addEventListener("focus", function () {
+        const q = this.value.toLowerCase().trim();
+        const filtered = q
+            ? itemList.filter(i =>
+                i.item_code.toLowerCase().includes(q) ||
+                i.descr.toLowerCase().includes(q))
+            : itemList;
+        openItemDropdown(filtered);
+    });
+
+    itemInput.addEventListener("input", function () {
+        const q = this.value.toLowerCase().trim();
+        const filtered = itemList.filter(i =>
+            i.item_code.toLowerCase().includes(q) ||
+            i.descr.toLowerCase().includes(q));
+        openItemDropdown(filtered);
+    });
+
+    itemInput.addEventListener("blur", function () {
+        setTimeout(() => {
+            document.getElementById("item_dropdown").classList.remove("open");
+        }, 150);
+    });
+
+});
+
+// ── MACHINE AUTOCOMPLETE (top-level so d_machine is always found) ──
+let machineList = [];
+
+async function loadMachineList() {
+    if (machineList.length) return;
+    try {
+        const res = await fetch("/api/machine/list");
+        if (res.ok) machineList = await res.json();
+    } catch (err) {
+        console.error("Machine list error:", err);
+    }
+}
+
+function openMachineDropdown(filtered) {
+    const dd = document.getElementById("machine_dropdown");
+    dd.innerHTML = "";
+    if (!filtered.length) { dd.classList.remove("open"); return; }
+
+    filtered.slice(0, 80).forEach(mc => {
+        const div = document.createElement("div");
+        div.className = "ac-item";
+        div.textContent = `${mc.mc_code}  —  ${mc.descr}`;
+        div.addEventListener("mousedown", function (e) {
+            e.preventDefault();
+            document.getElementById("d_machine").value = mc.mc_code;
+            dd.classList.remove("open");
+            document.getElementById("d_remark").focus();
+        });
+        dd.appendChild(div);
+    });
+    dd.classList.add("open");
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+    const machineInput = document.getElementById("d_machine");
+
+    machineInput.addEventListener("focus", function () {
+        const q = this.value.toLowerCase().trim();
+        const filtered = q
+            ? machineList.filter(m =>
+                m.mc_code.toLowerCase().includes(q) ||
+                m.descr.toLowerCase().includes(q))
+            : machineList;
+        openMachineDropdown(filtered);
+    });
+
+    machineInput.addEventListener("input", function () {
+        const q = this.value.toLowerCase().trim();
+        const filtered = machineList.filter(m =>
+            m.mc_code.toLowerCase().includes(q) ||
+            m.descr.toLowerCase().includes(q));
+        openMachineDropdown(filtered);
+    });
+
+    machineInput.addEventListener("blur", function () {
+        setTimeout(() => {
+            document.getElementById("machine_dropdown").classList.remove("open");
+        }, 150);
+    });
+});
+</script>
+
+</body>
+</html>

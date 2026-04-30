@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>System Home</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- Google Font -->
+<!--link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet"-->
+
+<!-- 1. Material Symbols (Local CSS) -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/material-symbols.css') }}">
+
+
+<style>
+/* BASIC RESET */
+html, body {
+  height: 100%;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Times New Roman';
+}
+
+/* BODY */
+body {
+  height: 100vh;
+  background: #bad3f8;
+  overflow: hidden;
+  position: relative;
+}
+
+/* FAINT OVERLAY */
+body::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to right, rgba(255,255,255,0.45), rgba(255,255,255,0.45));
+  z-index: 0;
+}
+
+/* WATERMARK — absolute inside .content so it centres in the visible area */
+.watermark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(500px, 65%);
+  opacity: 0.18;
+  z-index: 0;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* COMPANY HEADER — sits inside .content so it centres in the visible area */
+.company-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: 18px 10px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.logo-company {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logo-company img {
+  width: 90px;
+  height: auto;
+}
+
+.logo-company h1 {
+  font-size: clamp(16px, 3vw, 40px);
+  font-weight: 600;
+  color: #1e3c72;
+}
+
+.company-header h2 {
+  font-size: clamp(13px, 2.2vw, 30px);
+  font-weight: 500;
+  color: #1e3c72;
+  margin-top: 4px;
+}
+
+/* SIDEBAR */
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 240px;
+  height: 100vh;
+  background: #0f172a;
+  padding-top: 140px;
+  transition: width 0.3s ease;
+  z-index: 2;
+}
+
+.sidebar ul {
+  list-style: none;
+}
+
+.sidebar li {
+  position: relative;
+}
+
+.menu-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 8px 14px 16px;
+  cursor: pointer;
+  color: #e5e7eb;
+  overflow: hidden;
+  width: 100%;
+}
+
+.menu-btn:hover {
+  background: #1e293b;
+}
+
+.material-symbols-outlined {
+  font-size: 22px;
+  color: #c7d2fe;
+  flex-shrink: 0;
+}
+
+.text {
+  font-size: 16px;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.arrow {
+  flex-shrink: 0;
+  margin-left: 4px;
+  margin-right: 6px;
+  color: #a5b4fc;
+  pointer-events: none;
+  transition: transform 0.3s ease;
+  font-size: 18px !important;
+}
+/* SUB MENU*/
+/* SUB MENU */
+.sub-menu {
+  position: absolute;
+  top: 0;
+  left: 240px;
+  min-width: 240px;
+  background: #020617;
+  border-left: 2px solid #6366f1;
+  display: none;
+  z-index: 4000;
+}
+
+.sub-menu li {
+  padding: 12px 18px;
+  font-size: 14px;
+  color: #cbd5f5;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.sub-menu li:hover {
+  background: #1e293b;
+  color: #ffffff;
+}
+
+.sub-menu a {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
+.menu-item.open > .sub-menu {
+  display: block;
+}
+
+.menu-item.open .arrow {
+  transform: rotate(90deg);
+}
+
+/* MAIN CONTENT */
+.content {
+  position: fixed;
+  top: 0;
+  left: 240px;
+  width: calc(100% - 240px);
+  height: 100vh;
+  transition: left 0.3s ease, width 0.3s ease;
+  z-index: 1;
+}
+
+/* IFRAME */
+.content iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+/* SIDEBAR COLLAPSE */
+#menu-toggle:checked ~ .sidebar {
+  width: 70px;
+}
+
+#menu-toggle:checked ~ .content {
+  left: 70px;
+  width: calc(100% - 70px);
+}
+
+#menu-toggle:checked ~ .sidebar .text {
+  display: none;
+}
+
+#menu-toggle:checked ~ .sidebar .sub-menu {
+  left: 70px;
+}
+
+/* HAMBURGER */
+.menu-icon {
+  position: fixed;
+  top: 18px;
+  left: 18px;
+  width: 30px;
+  cursor: pointer;
+  z-index: 6000;
+}
+
+.menu-icon span {
+  display: block;
+  height: 3px;
+  background: #9bb0d3;
+  margin: 6px 0;
+}
+
+/* USER INFO BOX */
+.user-info {
+  position: right;
+  top: 0;
+  width: 100%;
+  padding: 15px 12px;
+  background: #020617;
+  border-bottom: 1px solid #1e293b;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: #6366f1;
+  color: white;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.user-details {
+  line-height: 1.2;
+}
+
+.user-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: #e5e7eb;
+}
+
+.user-site {
+  font-size: 13px;
+  color: #9ca3af;
+}
+
+/* Adjust sidebar padding */
+.sidebar {
+  padding-top: 120px;
+  z-index: 4;
+}
+
+/* Hide text when collapsed */
+#menu-toggle:checked ~ .sidebar .user-details {
+  display: none;
+}
+/* media resolution*/
+@media (max-width: 1200px) {
+
+  .sidebar {
+    width: 200px;
+  }
+
+  .content {
+    left: 200px;
+    width: calc(100% - 200px);
+  }
+
+  #menu-toggle:checked ~ .sidebar {
+    width: 64px;
+  }
+
+  #menu-toggle:checked ~ .content {
+    left: 64px;
+    width: calc(100% - 64px);
+  }
+
+  .company-header h1 {
+    font-size: 32px;
+  }
+
+  .company-header h2 {
+    font-size: 24px;
+  }
+}
+@media (max-width: 992px) {
+
+  .sidebar {
+    width: 180px;
+  }
+
+  .content {
+    left: 180px;
+    width: calc(100% - 180px);
+  }
+
+  #menu-toggle:checked ~ .sidebar {
+    width: 60px;
+  }
+
+  #menu-toggle:checked ~ .content {
+    left: 60px;
+    width: calc(100% - 60px);
+  }
+
+  .company-header h1 {
+    font-size: 26px;
+  }
+
+  .company-header h2 {
+    font-size: 20px;
+  }
+}
+@media (max-width: 768px) {
+
+  .sidebar {
+    position: fixed;
+    z-index: 5000;
+  }
+  .menu-icon {
+    z-index: 6000;
+  }
+
+  .content {
+    left: 0;
+    width: 100%;
+  }
+
+  .company-header {
+    height: 110px;
+  }
+
+  .company-header h1 {
+    font-size: 22px;
+  }
+
+  .company-header h2 {
+    font-size: 18px;
+  }
+}
+@media (max-width: 576px) {
+
+  
+  .sidebar {
+    width: 240px;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+  }
+
+  #menu-toggle:checked ~ .sidebar {
+    transform: translateX(0);
+  }
+
+  .content {
+    left: 0;
+    width: 100%;
+  }
+
+  .company-header {
+    display: none;
+  }
+  .company-header h1 {
+    font-size: 20px;
+  }
+
+  .company-header h2 {
+    font-size: 16px;
+  }
+  .menu-icon {
+    top: 12px;
+    left: 12px;
+  }
+}
+@media (max-width: 768px) {
+  body {
+    overflow-x: hidden;
+  }
+}
+
+
+</style>
+</head>
+
+<body>
+
+<!-- SIDEBAR TOGGLE -->
+<input type="checkbox" id="menu-toggle">
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="user-info">
+      <div class="avatar">{{ username[0]|upper }}</div>
+           <div class="user-details">
+                   <div class="user-name">{{ username }}</div>
+                  <div class="user-site">Site: {{ site_code }}</div>
+          </div>
+  </div>
+
+  <ul>
+    <li class="menu-item">
+      <div class="menu-btn">
+        <span class="material-symbols-outlined">folder</span>
+        <span class="text">File</span>
+        <span class="material-symbols-outlined arrow">chevron_right</span>
+      </div>
+      <ul class="sub-menu">
+       <li>Preference</li>
+        <li>Close All Forms</li>
+      </ul>
+    </li>
+
+    <li class="menu-item">
+      <div class="menu-btn">
+        <span class="material-symbols-outlined">menu_book</span>
+        <span class="text">Masters</span>
+      </div>
+    </li>
+
+    <li class="menu-item">
+      <div class="menu-btn">
+        <span class="material-symbols-outlined">sync_alt</span>
+        <span class="text">Transaction</span>
+        <span class="material-symbols-outlined arrow">chevron_right</span>
+      </div>
+      <ul class="sub-menu">
+        <li><a href="#" onclick="openForm('/transaction/Gatepass Data Entry'); return false;">Gatepass Data Entry</a></li>
+        <li><a href="#" onclick="openForm('/transaction/Gatepass In Out Entry'); return false;">Gatepass In / Out Data Entry</a></li>
+      </ul>
+    </li>
+
+    <li class="menu-item">
+      <div class="menu-btn">
+        <span class="material-symbols-outlined">bar_chart</span>
+        <span class="text">Reports</span>
+        <span class="material-symbols-outlined arrow">chevron_right</span>
+      </div>
+      <ul class="sub-menu">
+        <li><a href="#" onclick="openForm('/report/gatepass_print'); return false;">Gatepass Printing</a></li>
+        <li><a href="#" onclick="openForm('/report/pending_register'); return false;">Pending Item Register</a></li>
+        <li><a href="#" onclick="openForm('/report/gp_inout_register'); return false;">Gatepass In/Out Register</a></li>
+        <li><a href="#" onclick="openForm('/report/dept_pending_register'); return false;">Department Wise Pending Item Register</a></li>
+      </ul>
+    </li>
+
+    <li class="menu-item">
+      <div class="menu-btn">
+        <span class="material-symbols-outlined">window</span>
+        <span class="text">Windows</span>
+        <span class="material-symbols-outlined arrow">chevron_right</span>
+      </div>
+      <ul class="sub-menu">
+        <li>Vertical</li>
+        <li>Horizontal</li>
+        <li>Cascade</li>
+        <li>Arrange</li>
+        <li>Close All</li>
+      </ul>
+    </li>
+
+    <li class="menu-item">
+      <div class="menu-btn">
+        <span class="material-symbols-outlined">help</span>
+        <span class="text">Help</span>
+        <span class="material-symbols-outlined arrow">chevron_right</span>
+      </div>
+      <ul class="sub-menu">
+        <li>F2 – Field Help Popup</li>
+      </ul>
+    </li>
+        <li class="menu-item">
+      <div class="menu-btn" onclick="window.location.href='/logout'" style="cursor:pointer;">
+        <span class="material-symbols-outlined">logout</span>
+        <span class="text">Log Out</span>
+      </div>
+    </li>
+
+  </ul>
+</nav>
+
+<!-- HAMBURGER -->
+<label for="menu-toggle" class="menu-icon">
+  <span></span>
+  <span></span>
+  <span></span>
+</label>
+
+<!-- MAIN CONTENT — header & watermark live here so they follow the content area -->
+<div class="content" id="contentArea">
+
+  <!-- HEADER -->
+  <div class="company-header" id="companyHeader">
+    <div class="logo-company">
+      <img src="{{ url_for('static', filename='images/gima_logo-removebg-preview.png') }}" alt="Gimatex Logo">
+      <h1>Gimatex Industries Pvt. Ltd.</h1>
+    </div>
+    <h2>{{SYSTEM_NAME}}</h2>
+  </div>
+
+  <!-- WATERMARK -->
+  <img src="{{ url_for('static', filename='images/gima_logo-removebg-preview.png') }}" class="watermark" id="watermarkImg">
+
+  <!-- IFRAME -->
+  <iframe id="contentFrame" src="" style="display:none;"></iframe>
+
+</div>
+
+<!-- JS -->
+<script>
+// OPEN SUBMENUS
+document.querySelectorAll(".menu-btn").forEach(btn => {
+  btn.addEventListener("click", function (e) {
+    e.stopPropagation();
+    const parent = this.parentElement;
+    const isOpen = parent.classList.contains("open");
+    document.querySelectorAll(".menu-item").forEach(item => {
+      if (item !== parent) item.classList.remove("open");
+    });
+    parent.classList.toggle("open", !isOpen);
+  });
+});
+
+// ── Close all submenus helper ──────────────────────────────
+function closeAllMenus() {
+  document.querySelectorAll(".menu-item").forEach(item => item.classList.remove("open"));
+}
+
+// 1. Click outside the sidebar
+document.addEventListener("click", function(e) {
+  if (!e.target.closest(".sidebar")) {
+    closeAllMenus();
+  }
+  // Click on sidebar background (not on a button or submenu item)
+  else if (!e.target.closest(".menu-btn") && !e.target.closest(".sub-menu")) {
+    closeAllMenus();
+  }
+});
+
+// 2. Click inside the iframe (same-origin)
+const iframe = document.getElementById("contentFrame");
+iframe.addEventListener("load", function() {
+  try {
+    iframe.contentWindow.addEventListener("click", closeAllMenus);
+    iframe.contentWindow.addEventListener("mousedown", closeAllMenus);
+  } catch(e) {
+    // Cross-origin — handled by blur fallback below
+  }
+});
+
+// 3. Fallback: window loses focus to iframe (works for cross-origin too)
+window.addEventListener("blur", function() {
+  setTimeout(function() {
+    if (document.activeElement === iframe) {
+      closeAllMenus();
+    }
+  }, 100);
+});
+
+// OPEN FORM IN IFRAME
+function openForm(url) {
+  const toggle = document.getElementById("menu-toggle");
+  iframe.src = url;
+  iframe.style.display = "block";
+
+  document.getElementById("watermarkImg").style.display = "none";
+  document.getElementById("companyHeader").style.display = "none";
+
+  closeAllMenus();
+
+  // Collapse sidebar automatically
+  toggle.checked = true;
+}
+</script>
+
+</body>
+</html>

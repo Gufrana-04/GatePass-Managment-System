@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Dept Wise Pending Gatepass Register</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/material-symbols.css') }}">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  height: 100%; font-family: 'DM Sans', sans-serif; font-size: 13px;
+  background-color: #e8f0f9;
+  background-image:
+    radial-gradient(ellipse 60% 55% at 10% 10%, rgba(190,218,248,0.6) 0%, transparent 65%),
+    radial-gradient(ellipse 55% 50% at 90% 90%, rgba(178,210,244,0.5) 0%, transparent 60%);
+  overflow: hidden;
+}
+/* ── BACKGROUND MESH ───────────────────────────── */
+body::after {
+  content: ''; position: fixed; inset: 0; z-index: 0;
+  background-image:
+    linear-gradient(rgba(100,140,200,0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(100,140,200,0.07) 1px, transparent 1px);
+  background-size: 36px 36px; pointer-events: none;
+}
+
+/* ── VIEWS ─────────────────────────────────────── */
+#criteriaView {
+  position: fixed; inset: 0; z-index: 10;
+  display: flex; align-items: center; justify-content: center; padding: 20px;
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+#criteriaView.hidden {
+  opacity: 0; transform: scale(0.96) translateY(-12px); pointer-events: none;
+}
+#reportView {
+  position: fixed; inset: 0; z-index: 9;
+  display: flex; flex-direction: column;
+  opacity: 0; transform: translateY(14px);
+  transition: opacity 0.4s ease, transform 0.4s ease; pointer-events: none;
+}
+#reportView.visible {
+  opacity: 1; transform: translateY(0); pointer-events: all;
+}
+
+/* ── CARD ──────────────────────────────────────── */
+.criteria-card {
+  position: relative; z-index: 1;
+  width: 100%; max-width: 520px;
+  background: #daeaf8;
+  border: 1px solid #0f172a;
+  border-radius: 14px;
+  box-shadow: 0 4px 20px rgba(30,58,95,0.11), 0 1px 4px rgba(30,58,95,0.07);
+  overflow: hidden;
+}
+.criteria-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
+  background: #1e3a5f;
+}
+
+/* ── CARD HEADER ───────────────────────────────── */
+.card-header {
+  padding: 26px 30px 18px; border-bottom: 1px solid #daeaf8;
+  display: flex; align-items: center; gap: 14px;
+}
+.card-header-icon {
+  width: 42px; height: 42px; border-radius: 10px;
+  background: #ddeef9; border: 1px solid #c4ddf0;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.card-header-icon .material-symbols-outlined { font-size: 21px; color: #1e3a5f; }
+.card-header-text h2 {
+  font-family: 'DM Sans', sans-serif; font-size: 16px; font-weight: 600;
+  color: #14253a; letter-spacing: 0.01em; line-height: 1.2;
+}
+.card-header-text p { font-size: 12px; color: #7a96b0; margin-top: 3px; }
+
+/* ── CARD BODY ─────────────────────────────────── */
+.card-body { padding: 20px 30px 26px; display: flex; flex-direction: column; gap: 14px; }
+
+/* ── SECTION LABEL ─────────────────────────────── */
+.section-label {
+  font-size: 11px; font-weight: 600; letter-spacing: 0.07em;
+  text-transform: uppercase; color: #1e3560; margin-bottom: -6px; padding-left: 1px;
+}
+
+/* ── FIELD GROUP ───────────────────────────────── */
+.field-group { display: flex; flex-direction: column; gap: 5px; }
+.field-group label {
+  font-size: 11px; font-weight: 600; color: #1e3560;
+  letter-spacing: 0.055em; text-transform: uppercase;
+}
+.field-group input, .field-group select {
+  background: #f8fbff; border: 1px solid #ccdff0;
+  border-radius: 7px; color: #14253a; padding: 8px 11px;
+  font-size: 13px; font-family: 'DM Sans', sans-serif;
+  width: 100%; outline: none;
+  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s; appearance: none;
+}
+.field-group input::placeholder { color: #a8bece; }
+.field-group input:focus, .field-group select:focus {
+  border-color: #7aaed6; background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(30,58,95,0.08);
+}
+.field-group input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.3) sepia(1) saturate(1.5) hue-rotate(185deg); cursor: pointer;
+}
+.field-group select option { background-color: #f3f8fe; color: #14253a; padding: 10px; }
+
+/* ── RANGE ROW ─────────────────────────────────── */
+.range-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+/* ── DIVIDER ───────────────────────────────────── */
+.divider {
+  height: 1px;
+  background: #daeaf8;
+  margin: 2px 0;
+}
+
+/* ── RETRIEVE BUTTON ───────────────────────────── */
+.btn-retrieve {
+  background: #1e3a5f;
+  color: #fff; border: none; border-radius: 8px;
+  padding: 11px 0; cursor: pointer;
+  font-size: 13.5px; font-family: 'DM Sans', sans-serif;
+  font-weight: 600; letter-spacing: 0.03em; width: 100%; margin-top: 4px;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  transition: background 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 2px 10px rgba(30,58,95,0.20);
+  position: relative; overflow: hidden;
+}
+.btn-retrieve:hover { background: #27487a; box-shadow: 0 4px 16px rgba(30,58,95,0.28); }
+.btn-retrieve:active { transform: translateY(1px); }
+.btn-retrieve:disabled { background: #b8cfe4; color: #e8f2fa; box-shadow: none; cursor: not-allowed; transform: none; }
+.btn-retrieve .material-symbols-outlined { font-size: 18px; }
+
+/* ── STATUS MSG ────────────────────────────────── */
+.status-msg { font-size: 12px; color: #7a96b0; text-align: center; min-height: 18px; letter-spacing: 0.01em; }
+.status-msg.error { color: #c0392b; }
+.status-msg.ok    { color: #1a7a4a; }
+
+/* ── REPORT TOOLBAR ────────────────────────────── */
+.report-toolbar {
+  background: #1e3a5f;
+  border-bottom: 1px solid #16304f;
+  padding: 10px 20px; display: flex; align-items: center; gap: 14px;
+  flex-shrink: 0; z-index: 2; position: relative;
+}
+.btn-back {
+  display: flex; align-items: center; gap: 6px;
+  background: rgba(255,255,255,0.10); border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 7px; color: #c8ddf0; padding: 6px 13px; cursor: pointer;
+  font-size: 13px; font-family: 'DM Sans', sans-serif; font-weight: 500; transition: all 0.2s;
+}
+.btn-back:hover { background: rgba(255,255,255,0.18); color: #fff; }
+.btn-back .material-symbols-outlined { font-size: 17px; }
+.toolbar-title {
+  color: #e8f2fa; font-size: 14px; font-weight: 600;
+  font-family: 'DM Sans', sans-serif; letter-spacing: 0.02em; flex: 1;
+}
+.gp-count { color: #7aaed6; font-size: 12px; }
+.row-count { color: #7aaed6; font-size: 12px; }
+.btn-print {
+  background: #2a6e4a;
+  color: #fff; border: none; border-radius: 7px; padding: 7px 16px; cursor: pointer;
+  font-size: 13px; font-family: 'DM Sans', sans-serif;
+  font-weight: 600; display: flex; align-items: center; gap: 6px;
+  transition: background 0.2s; box-shadow: 0 2px 8px rgba(30,90,60,0.25);
+}
+.btn-print:hover { background: #235c3d; }
+.btn-print:disabled { background: #2d4a5e; color: #5a7a8e; box-shadow: none; cursor: not-allowed; }
+.btn-print .material-symbols-outlined { font-size: 17px; }
+
+/* ── PREVIEW SCROLL ────────────────────────────── */
+.preview-scroll {
+  flex: 1; overflow-y: auto; padding: 28px 20px;
+  display: flex; flex-direction: column; align-items: center; gap: 28px;
+  background-color: #dde8f2;
+  background-image:
+    linear-gradient(rgba(100,140,200,0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(100,140,200,0.06) 1px, transparent 1px);
+  background-size: 36px 36px;
+}
+.empty-state {
+  color: #7a96b0; font-size: 15px; margin-top: 80px; text-align: center;
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+}
+.empty-state .material-symbols-outlined { font-size: 48px; color: #a8c0d6; }
+
+/* ══════════════════════════════════════════════════
+   REPORT — matches PDF exactly
+   ══════════════════════════════════════════════════ */
+.report-wrap {
+  background: #fff;
+  box-shadow: 0 2px 10px rgba(0,0,0,.3);
+  padding: 10px 12px 12px;
+  font-family: 'Times New Roman', serif;
+  font-size: 11px; color: #000;
+  width: 100%;
+}
+
+/* Header */
+.rpt-header {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  margin-bottom: 6px; border-bottom: 1px solid #000; padding-bottom: 5px;
+}
+.rpt-header-left  { text-align: left; }
+.rpt-header-right { text-align: right; font-size: 11px; color: #000; white-space: nowrap; }
+.rpt-header h1 { font-size: 14px; font-weight: 700; text-transform: uppercase; color: #000; }
+.rpt-header h2 { font-size: 12px; font-weight: 700; margin-top: 2px; color: #000; }
+
+/* Table */
+.reg-tbl { width: 100%; border-collapse: collapse; font-size: 10.5px; font-family: 'Times New Roman', serif; }
+.reg-tbl thead tr  { background: #fff; }
+.reg-tbl thead th  {
+  padding: 2px 3px; text-align: left; font-weight: 700;
+  font-size: 10px; vertical-align: middle; border-bottom: 1px solid #000;
+}
+.reg-tbl tbody tr  { background: #fff; }
+.reg-tbl tbody td  { padding: 3px 5px; vertical-align: top; }
+.reg-tbl tfoot tr  { background: #fff; }
+.reg-tbl tfoot td  { padding: 4px 5px; border-top: 1px solid #000; border-bottom: 1px solid #000; font-weight: 700; }
+
+/* Department header row */
+.reg-tbl tr.dept-header td {
+  font-weight: 700; font-size: 10.5px;
+  padding: 7px 5px 3px;
+  border-top: 1px solid #000;
+}
+.reg-tbl tr.dept-header.first-dept td { border-top: none; }
+
+/* Department subtotal row */
+.reg-tbl tr.dept-total td {
+  font-weight: 700;
+  border-top: 1px solid #000;
+  border-bottom: 1px solid #000;
+  padding: 3px 5px;
+}
+
+/* Row count line */
+.row-count-line {
+  font-family: 'Times New Roman', serif;
+  font-size: 10.5px; color: #000;
+  padding: 4px 0 0 2px;
+  font-weight: 700;
+}
+
+/* ══════════════════════════════════════════════════
+   PRINT
+   ══════════════════════════════════════════════════ */
+@media print {
+  html, body { height: auto !important; overflow: visible !important; background: #fff !important; }
+  #criteriaView, #reportView .report-toolbar, .empty-state { display: none !important; }
+  #reportView { display: block !important; opacity: 1 !important; transform: none !important; }
+  .preview-scroll {
+    display: block !important; height: auto !important; overflow: visible !important;
+    padding: 0 !important; background: #fff !important;
+  }
+  .report-wrap { box-shadow: none !important; padding: 0 !important; width: 100% !important; height: auto !important; overflow: visible !important; }
+  .reg-tbl { page-break-inside: auto; }
+  .reg-tbl tr { page-break-inside: avoid; page-break-after: auto; }
+  .reg-tbl thead { display: table-header-group; }
+  .reg-tbl tfoot { display: table-footer-group; }
+  .reg-tbl thead th  { border-bottom: 1px solid #000 !important; }
+  .reg-tbl tfoot td  { border-bottom: 1px solid #000 !important; }
+  .row-count-line    { page-break-before: avoid; }
+  @page { size: A4 landscape; margin: 8mm; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ CRITERIA VIEW ═══════════════════════════════════════════════ -->
+<div id="criteriaView">
+  <div class="criteria-card">
+
+    <div class="card-header">
+      <div class="card-header-icon">
+        <span class="material-symbols-outlined">pending_actions</span>
+      </div>
+      <div class="card-header-text">
+        <h2>Department Wise Pending Register</h2>
+        <p>Set filters to view department-wise pending gatepasses</p>
+      </div>
+    </div>
+
+    <div class="card-body">
+
+      <!-- Site Code -->
+      <div class="field-group">
+        <label>Site Code</label>
+        <select id="fSiteCode">
+          <option value="{{ site_code }}">{{ site_code }}</option>
+        </select>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Pending As On Date -->
+      <div class="field-group">
+        <label>Pending As On Date</label>
+        <input type="date" id="fAsOnDate">
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Department Range -->
+      <div class="section-label">Department Range</div>
+      <div class="range-row">
+        <div class="field-group">
+          <label>From</label>
+          <select id="fDeptFrom">
+            <option value="">-- All --</option>
+          </select>
+        </div>
+        <div class="field-group">
+          <label>To</label>
+          <select id="fDeptTo">
+            <option value="">-- All --</option>
+          </select>
+        </div>
+      </div>
+
+      <button class="btn-retrieve" id="btnRetrieve" onclick="retrieve()">
+        <span class="material-symbols-outlined">search</span>
+        Retrieve
+      </button>
+      <div class="status-msg" id="statusMsg"></div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ═══ REPORT VIEW ══════════════════════════════════════════════════ -->
+<div id="reportView">
+  <div class="report-toolbar">
+    <button class="btn-back" onclick="goBack()">
+      <span class="material-symbols-outlined">arrow_back</span>
+      Back
+    </button>
+    <span class="toolbar-title">Preview</span>
+    <span class="row-count" id="rowCount"></span>
+    <button class="btn-print" id="btnPrint" onclick="window.print()" disabled>
+      <span class="material-symbols-outlined">print</span>
+      Print
+    </button>
+  </div>
+  <div class="preview-scroll" id="previewScroll">
+    <div class="empty-state" id="emptyState">
+      <span class="material-symbols-outlined">pending_actions</span>
+      Set filters and click Retrieve to view pending items.
+    </div>
+  </div>
+</div>
+
+<script>
+/* ── View switching ─────────────────────────────── */
+function showReport() {
+  document.getElementById('criteriaView').classList.add('hidden');
+  document.getElementById('reportView').classList.add('visible');
+}
+function goBack() {
+  document.getElementById('criteriaView').classList.remove('hidden');
+  document.getElementById('reportView').classList.remove('visible');
+}
+
+/* ── Load site codes ───────────────────────────── */
+async function loadSiteCodes() {
+  try {
+    const data = await (await fetch('/api/sitecodes')).json();
+    if (data.error) return;
+    const sel = document.getElementById('fSiteCode');
+    const cur = sel.value; sel.innerHTML = '';
+    data.forEach(d => {
+      const o = document.createElement('option');
+      o.value = d.site_code; o.textContent = d.site_code;
+      if (d.site_code === cur) o.selected = true;
+      sel.appendChild(o);
+    });
+  } catch (_) {}
+}
+
+/* ── Load department dropdowns ─────────────────── */
+async function loadDepts() {
+  try {
+    const data = await (await fetch('/api/department/list')).json();
+    if (data.error) return;
+    const opts = data.map(d =>
+      `<option value="${esc(d.dept_code)}">${esc(d.dept_code)} \u2013 ${esc(d.department)}</option>`
+    ).join('');
+    ['fDeptFrom', 'fDeptTo'].forEach(id => {
+      document.getElementById(id).innerHTML =
+        '<option value="">-- All --</option>' + opts;
+    });
+    const selTo = document.getElementById('fDeptTo');
+    if (selTo.options.length > 1) selTo.selectedIndex = selTo.options.length - 1;
+  } catch (_) {}
+}
+
+/* ── Helpers ───────────────────────────────────── */
+function esc(s) {
+  if (s == null) return '';
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function isoToDDMMYY(iso) {
+  if (!iso) return '';
+  const [y, m, d] = iso.split('-');
+  return y ? `${d}/${m}/${y.slice(2)}` : '';
+}
+
+function numFmt(v) {
+  const n = parseFloat(v);
+  return isNaN(n) ? '' : n.toFixed(2);
+}
+
+/* ── Retrieve ──────────────────────────────────── */
+async function retrieve() {
+  const btn = document.getElementById('btnRetrieve');
+  const msg = document.getElementById('statusMsg');
+  btn.disabled = true;
+  msg.className = 'status-msg'; msg.textContent = 'Fetching\u2026';
+
+  const asOnDate = document.getElementById('fAsOnDate').value;
+  if (!asOnDate) {
+    msg.className = 'status-msg error';
+    msg.textContent = '"As on Date" is required.';
+    btn.disabled = false; return;
+  }
+
+  const deptFrom = document.getElementById('fDeptFrom').value.trim();
+  const deptTo   = document.getElementById('fDeptTo').value.trim();
+
+  const params = new URLSearchParams({
+    as_gp_date_to : isoToDDMMYY(asOnDate),
+    dept_code_fr  : deptFrom,
+    dept_code_to  : deptTo,
+  });
+
+  try {
+    const res  = await fetch('/api/report/dept_pending_register?' + params);
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+
+    renderReport(data, asOnDate);
+
+    const cnt = data.length;
+    msg.className = 'status-msg ok';
+    msg.textContent = cnt ? `${cnt} row(s) found.` : 'No pending items found.';
+    document.getElementById('rowCount').textContent = cnt ? `${cnt} rows` : '';
+    document.getElementById('btnPrint').disabled = !cnt;
+    if (cnt) showReport();
+  } catch (err) {
+    msg.className = 'status-msg error';
+    msg.textContent = 'Error: ' + err.message;
+    document.getElementById('btnPrint').disabled = true;
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+/* ── Render Department-Wise Report ─────────────── */
+function renderReport(rows, asOnDate) {
+  const scroll = document.getElementById('previewScroll');
+  scroll.querySelectorAll('.report-wrap, .row-count-line').forEach(e => e.remove());
+  document.getElementById('emptyState').style.display = rows.length ? 'none' : 'flex';
+  if (!rows.length) return;
+
+  /* Format display date */
+  const displayDate = new Date(asOnDate).toLocaleDateString('en-IN',
+    { day: '2-digit', month: '2-digit', year: 'numeric' });
+
+  const wrap = document.createElement('div');
+  wrap.className = 'report-wrap';
+
+  /* ── Report Header ── */
+  const hdrDiv = document.createElement('div');
+  hdrDiv.className = 'rpt-header';
+  hdrDiv.innerHTML = `
+    <div class="rpt-header-left">
+      <h1>GIMATEX INDUSTRIES PVT. LTD., HGT</h1>
+      <h2>Department wise Pending Gatepass Register &nbsp; As on : ${esc(displayDate)}</h2>
+    </div>
+    <div class="rpt-header-right"></div>`;
+  wrap.appendChild(hdrDiv);
+
+  /* ── Table ── */
+  /* Dept-wise PDF has 14 columns (no "Department" column) */
+  const COLS = 14;
+
+  const tbl = document.createElement('table');
+  tbl.className = 'reg-tbl';
+
+  const thead = document.createElement('thead');
+  thead.innerHTML = `<tr>
+    <th>Gatepass<br>No.</th>
+    <th>Gatepass<br>Date</th>
+    <th>Supplier Name</th>
+    <th>Transport<br>Type</th>
+    <th>Carry out<br>By</th>
+    <th>Valid<br>Date</th>
+    <th>Sr.<br>No.</th>
+    <th>Item Code &amp; Description</th>
+    <th>Unit</th>
+    <th>G.P.Out<br>Quantity</th>
+    <th>In<br>Quantity</th>
+    <th>Pending<br>Quantity</th>
+    <th>Days<br>Valid</th>
+    <th>Days<br>GP Dt</th>
+  </tr>`;
+  tbl.appendChild(thead);
+
+  const tbody = document.createElement('tbody');
+  let grandOut = 0, grandIn = 0, grandPending = 0;
+
+  /* ── Group rows by dept_code, preserving original order ── */
+  const groups  = [];
+  const seenMap = new Map();
+
+  rows.forEach(r => {
+    const key = r.dept_code || '__NONE__';
+    if (!seenMap.has(key)) {
+      const g = {
+        dept_code  : r.dept_code  || '',
+        dept_descr : r.dept_descr || r.dept_name || '',
+        rows       : []
+      };
+      seenMap.set(key, g);
+      groups.push(g);
+    }
+    seenMap.get(key).rows.push(r);
+  });
+
+  /* ── Render each department group ── */
+  groups.forEach((g, gIdx) => {
+
+    /* Department header row — e.g. "Department : A002 - H.R.D." */
+    const deptLabel = g.dept_code
+      ? `Department : ${g.dept_code} - ${g.dept_descr}`
+      : `Department : ${g.dept_descr}`;
+
+    const hRow = document.createElement('tr');
+    hRow.className = 'dept-header' + (gIdx === 0 ? ' first-dept' : '');
+    hRow.innerHTML = `<td colspan="${COLS}">${esc(deptLabel)}</td>`;
+    tbody.appendChild(hRow);
+
+    /* Data rows for this department */
+    let deptOut = 0, deptIn = 0, deptPending = 0;
+
+    g.rows.forEach(r => {
+      const outQty  = parseFloat(r.quantity || 0);
+      const inQty   = parseFloat(r.in_qty   || 0);
+      const pending = outQty - inQty;
+      deptOut     += outQty;
+      deptIn      += inQty;
+      deptPending += pending;
+      grandOut    += outQty;
+      grandIn     += inQty;
+      grandPending+= pending;
+
+      /* Item code + description merged as PDF shows */
+      const itemCell = [r.item_code, r.item_descr]
+        .map(v => (v || '').trim()).filter(Boolean).join('  ');
+
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td style="white-space:nowrap;">${esc(r.gp_no)}</td>
+        <td style="white-space:nowrap;">${esc(r.gp_date)}</td>
+        <td>${esc(r.supp_name)}</td>
+        <td>${esc(r.trans_type)}</td>
+        <td>${esc(r.carry_out_by)}</td>
+        <td style="white-space:nowrap;">${esc(r.valid_date)}</td>
+        <td style="text-align:center;">${esc(r.sr_no)}</td>
+        <td>${esc(itemCell)}</td>
+        <td style="text-align:center;">${esc(r.uom)}</td>
+        <td style="text-align:right;">${numFmt(outQty)}</td>
+        <td style="text-align:right;">${numFmt(inQty)}</td>
+        <td style="text-align:right;font-weight:700;">${numFmt(deptPending > 0 ? pending : pending)}</td>
+        <td style="text-align:right;">${esc(r.days_valid)}</td>
+        <td style="text-align:right;">${esc(r.days_gp)}</td>`;
+      tbody.appendChild(tr);
+    });
+
+    /* Department subtotal row — e.g. "H.R.D. Total :" */
+    const deptTotalLabel = `${g.dept_descr} Total :`;
+    const totRow = document.createElement('tr');
+    totRow.className = 'dept-total';
+    totRow.innerHTML = `
+      <td colspan="9" style="text-align:LEFT;">${esc(deptTotalLabel)}</td>
+      <td style="text-align:right;">${numFmt(deptOut)}</td>
+      <td style="text-align:right;">${numFmt(deptIn)}</td>
+      <td style="text-align:right;">${numFmt(deptPending)}</td>
+      <td colspan="2"></td>`;
+    tbody.appendChild(totRow);
+  });
+
+  tbl.appendChild(tbody);
+
+  /* ── Grand Total footer ── */
+  const tfoot = document.createElement('tfoot');
+  tfoot.innerHTML = `<tr>
+    <td colspan="9" style="text-align:LEFT;">GRAND TOTAL :</td>
+    <td style="text-align:right;">${numFmt(grandOut)}</td>
+    <td style="text-align:right;">${numFmt(grandIn)}</td>
+    <td style="text-align:right;">${numFmt(grandPending)}</td>
+    <td colspan="2"></td>
+  </tr>`;
+  tbl.appendChild(tfoot);
+
+  wrap.appendChild(tbl);
+  scroll.appendChild(wrap);
+
+}
+
+/* ── Enter key fires retrieve ──────────────────── */
+document.querySelectorAll('#criteriaView input, #criteriaView select').forEach(i =>
+  i.addEventListener('keydown', e => { if (e.key === 'Enter') retrieve(); })
+);
+
+/* ── Init ──────────────────────────────────────── */
+document.getElementById('fAsOnDate').value = new Date().toISOString().split('T')[0];
+loadSiteCodes();
+loadDepts();
+</script>
+</body>
+</html>

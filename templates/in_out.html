@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Gatepass In / Out Entry</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/material-symbols.css') }}">
+
+<style>
+body {
+    margin: 0;
+    font-family: "Times New Roman", Times, serif;
+    background: #edf2f9;
+    color: #1f2937;
+}
+
+.container {
+    padding: 15px 20px 50px 20px;
+}
+
+/* ===== TOP SEARCH ===== */
+.top-search {
+    background: #f3f6fc;
+    padding: 8px 12px;
+    border: 1px solid #a7b8d6;
+    border-radius: 6px;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.top-search input {
+    height: 22px;
+    font-size: 13px;
+    padding: 2px 6px;
+    border: 1px solid #7c8fb5;
+    background: #FFF;
+    border-radius: 3px;
+    width: 220px;
+}
+.top-search button {
+    padding: 2px 10px;
+    font-size: 12px;
+    border: 1px solid #7c8fb5;
+    background: #bbc2d1;
+    border-radius: 4px;
+    cursor: pointer;
+}
+.top-search button:hover { background: #8fa6d8; }
+
+/* ===== SECTION CARD ===== */
+.section {
+    background: #f3f6fc;
+    border: 1px solid #a7b8d6;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+.section-header {
+    background: #c6d4f0;
+    padding: 8px 12px;
+    font-weight: 600;
+    border-bottom: 1px solid #9aa8c7;
+    border-radius: 8px 8px 0 0;
+}
+
+
+/* ===== DETAIL GRID ===== */
+.grid-wrapper { padding: 8px 10px 4px; }
+.grid-wrapper table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.grid-wrapper th {
+    background: #2c4a7c;
+    color: #ffffff;
+    border: 1px solid #1e3560;
+    padding: 6px 8px;
+    text-align: left;
+    font-size: 12px;
+    white-space: nowrap;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+}
+.grid-wrapper td { border: 1px solid #d0daf0; padding: 5px 8px; }
+.grid-wrapper tbody tr { cursor: pointer; background: #ffffff; }
+.grid-wrapper tbody tr:nth-child(even) { background: #eef3fb; }
+.grid-wrapper tbody tr:hover td { background: #d0e4ff; }
+.grid-wrapper tbody tr.selected td { background: #fff3b0 !important; font-weight: bold; border-color: #f0c040 !important; }
+/* Static grid height — always fixed, scrolls inside */
+.grid-scroll {
+    height: 180px;
+    overflow-y: auto;
+    overflow-x: auto;
+}
+
+
+
+/* ===== FIELD TOOLTIP ===== */
+#msgBar { display: none; }
+.field-tooltip {
+    position: absolute;
+    background: #d4e4f7;
+    border: 1px solid #296b97;
+    color: #080000;
+    font-size: 11.5px;
+    font-weight: 500;
+    padding: 5px 10px;
+    border-radius: 4px;
+    white-space: nowrap;
+    z-index: 9999;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+    pointer-events: none;
+}
+.field-tooltip::before {
+    content: '';
+    position: absolute;
+    top: -6px; left: 12px;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-bottom: 6px solid #296b97;
+}
+.field-tooltip.ok {
+    background: #d4edda;
+    border-color: #28a745;
+    color: #155724;
+}
+.field-tooltip.ok::before { border-bottom-color: #28a745; }
+
+/* ===== ENTRY AREA (8 fields) ===== */
+.entry-area { padding: 12px; border-top: 1px solid #d0dbf2; }
+.entry-grid {
+    display: grid;
+    grid-template-columns: 165px 160px 165px 160px 165px 180px;
+    gap: 6px 16px;
+    justify-content: start;
+}
+.entry-grid label {
+    text-align: right;
+    font-size: 13px;
+    white-space: nowrap;
+    align-self: center;
+}
+.entry-grid input {
+    width: 150px;
+    height: 23px;
+    font-size: 12px;
+    padding: 2px 4px;
+    border: 1px solid #7c8fb5;
+    background: #d8dde8;
+    border-radius: 3px;
+    box-sizing: border-box;
+    color: #555;
+}
+
+.entry-grid input:not(:disabled) { background: #ffffff; color: #1f2937; }
+.entry-grid input:focus { outline: none; border-color: #4f46e5; background: #ffffff; }
+.entry-grid input:disabled { background: #d8dde8; color: #555; }
+
+/* ===== MASTER FORM ===== */
+.form-area { padding: 15px; }
+.form-grid {
+    display: grid;
+    grid-template-columns: 170px 170px 170px 170px 170px 170px;
+    gap: 6px 20px;
+    justify-content: start;
+}
+.form-grid label { text-align: right; font-size: 13px; white-space: nowrap; align-self: center; }
+.form-grid input,
+.form-grid select {
+    width: 160px;
+    height: 23px;
+    font-size: 12px;
+    padding: 2px 4px;
+    border: 1px solid #7c8fb5;
+    background: #d8dde8;
+    border-radius: 3px;
+    box-sizing: border-box;
+    color: #444;
+}
+
+/* ===== BUTTONS ===== */
+.button-row { margin-top: 12px; display: flex; justify-content: flex-end; gap: 10px; }
+.button-row button {
+    display: flex; align-items: center; gap: 5px;
+    padding: 4px 10px;
+    border: 1px solid #8fa6d8;
+    background: #bbc2d1;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 12px;
+}
+.button-row button:hover { background: #8fa6d8; }
+.button-row button:disabled { opacity: 0.45; cursor: not-allowed; }
+.btn-ok   { background: #2e7d32 !important; color: #fff; border-color: #1b5e20 !important; }
+.btn-ok:hover:not(:disabled) { background: #1b5e20 !important; }
+.btn-exit { background: #c62828 !important; color: #fff; border-color: #8e0000 !important; }
+.btn-exit:hover { background: #8e0000 !important; }
+
+/* ===== STATUS PANEL ===== */
+.status-panel {
+    position: fixed; bottom: 0; width: 100%; height: 28px;
+    background: #dde7fb; border-top: 1px solid #a7b8d6;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 20px; font-size: 12px; box-sizing: border-box;
+}
+
+/* msgBar styles moved to grid section above */
+
+@media (max-width: 1200px) {
+    .entry-grid, .form-grid { grid-template-columns: 165px 160px 165px 160px; }
+}
+@media (max-width: 800px) {
+    .entry-grid, .form-grid { grid-template-columns: 165px 160px; }
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+    <!-- TOP SEARCH -->
+    <div class="top-search">
+        <label style="font-size:13px;">Gatepass No:</label>
+        <input type="text" id="gpNoSearch" placeholder="Enter GP No and press Enter"
+               autocomplete="off">
+        <button onclick="loadGatepass()">
+            <span class="material-symbols-outlined" style="font-size:14px;vertical-align:middle;">search</span>
+            Search
+        </button>
+
+    </div>
+
+    <!-- GRID — no header, fixed height -->
+    <div class="section" style="border-radius:8px; margin-bottom:20px;">
+        <div class="grid-wrapper"><div class="grid-scroll">
+            <table id="detailTable">
+                <thead>
+                    <tr>
+                        <th>Sr.No.</th>
+                        <th>Item Code</th>
+                        <th>Item Description</th>
+                        <th>UOM</th>
+                        <th>Quantity</th>
+                        <th>IN Qty</th>
+                        <th>IN Date &amp; Time</th>
+                        <th>Inward No.</th>
+                        <th>Repair Chgs.</th>
+                        <th>Edit User</th>
+                    </tr>
+                </thead>
+                <tbody id="detailBody">
+                    <tr>
+                        <td colspan="10" style="text-align:center;color:#999;padding:10px;">
+                            Search for a Gatepass No. to load items
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div></div>
+    </div>
+
+    <!-- SINGLE SECTION: Entry form + Master details separated by a thin line -->
+    <div class="section">
+
+        <!-- ENTRY FORM -->
+        <div class="section-header">Item Inward / Outward Details</div>
+        <div class="entry-area">
+            <div class="entry-grid">
+                <label>Serial No</label>
+                <input id="fSrNo" disabled>
+
+                <label>Item Code</label>
+                <input id="fItemCode" disabled>
+
+                <label>Unit of Measurement</label>
+                <input id="fUom" disabled>
+
+                <label>Quantity</label>
+                <input id="fQuantity" disabled>
+
+                <label>IN Quantity</label>
+                <input id="fInQty" type="number" step="any" min="0" disabled>
+
+                <label>IN Date &amp; Time</label>
+                <input id="fInDttime" placeholder="DD/MM/YYYY HH-MM AM/PM"
+                       style="width:155px;" disabled>
+
+                <label>Repairing Charges</label>
+                <input id="fRepairChgs" type="number" step="any" min="0" value="0" disabled>
+
+                <label>Security Gate Inward No</label>
+                <input id="fInwardNo" maxlength="15" disabled>
+            </div>
+
+            <div class="button-row">
+                <button id="btnOk" class="btn-ok" onclick="saveInOut()" disabled>
+                    <span class="material-symbols-outlined" style="font-size:14px;">check_circle</span>
+                    OK
+                </button>
+                <button class="btn-exit" onclick="window.history.back()">
+                    <span class="material-symbols-outlined" style="font-size:14px;">exit_to_app</span>
+                    Exit
+                </button>
+            </div>
+        </div>
+
+        <!-- THIN DIVIDER LINE -->
+        <div style="border-top: 1px solid #c5d0e6; margin: 0 12px;"></div>
+
+        <!-- MASTER DETAILS -->
+        <div class="section-Mheader" style="border-radius:0;"></div>
+        <div class="form-area">
+            <div class="form-grid">
+                <label>Site Code</label>         <input id="mSiteCode"   readonly>
+                <label>Gatepass Date</label>      <input id="mGpDate"     type="text" readonly>
+                <label>Gatepass Type</label>      <input id="mGpType"     readonly>
+                <label>Material Dept</label>      <input id="mDeptCdMetr" readonly>
+                <label>Supplier Code</label>      <input id="mSuppCode"   readonly>
+                <label>Supplier Name</label>      <input id="mSuppName"   readonly>
+                <label>Supplier Address 1</label> <input id="mAddr1"      readonly>
+                <label>Supplier Address 2</label> <input id="mAddr2"      readonly>
+                <label>Supplier Address 3</label> <input id="mAddr3"      readonly>
+                <label>Supplier City</label>      <input id="mCity"       readonly>
+                <label>Transport Type</label>     <input id="mTransType"  readonly>
+                <label>Vehicle No</label>         <input id="mVehicleNo"  readonly>
+                <label>Phone No</label>           <input id="mPhone"      readonly>
+                <label>Email ID</label>           <input id="mEmailAddr"  readonly>
+                <label>Carry Out By</label>       <input id="mCarryOutBy" readonly>
+                <label>Courier Name</label>       <input id="mCourierNm"  readonly>
+                <label>Docket No</label>          <input id="mDocketNo"   readonly>
+                <label>Department Code</label>    <input id="mDeptCode"   readonly>
+                <label>Valid Upto Date</label>    <input id="mValidDate"  type="text" readonly>
+                <label>Security Remark</label>    <input id="mSecRemark"  readonly>
+                <label>Prepared By</label>        <input id="mPrepBy"     readonly>
+            </div>
+        </div>
+    </div>
+
+</div><!-- /container -->
+
+<div class="status-panel">
+    <div>User: {{ user }}</div>
+    <div id="datetime"></div>
+    <div>Site: {{ site_code }} - {{ site_name }}</div>
+    <div>Department: {{ department }}</div>
+</div>
+
+<script>
+/* ============================================================
+   STATE
+   ============================================================ */
+let currentGpNo  = "";
+let selectedSrNo = null;
+let selectedQty  = 0;   // out quantity of selected row
+
+/* ============================================================
+   CLOCK + SERVER TIME
+   Column in_dttime is VARCHAR — stored as "DD/MM/YYYY HH-MM"
+   Server time is fetched once on load so the pre-fill is correct
+   even when the client system clock is stuck at 00:00.
+   ============================================================ */
+// Returns CURRENT datetime as "DD/MM/YYYY HH-MM AM/PM"
+function serverDtStr() {
+    const n    = new Date();
+    const dd   = String(n.getDate()).padStart(2,"0");
+    const mm   = String(n.getMonth()+1).padStart(2,"0");
+    const yyyy = n.getFullYear();
+    let   hh   = n.getHours();
+    const min  = String(n.getMinutes()).padStart(2,"0");
+    const ampm = hh >= 12 ? "PM" : "AM";
+    hh = hh % 12 || 12;
+    return `${dd}/${mm}/${yyyy} ${String(hh).padStart(2,"0")}-${min} ${ampm}`;
+}
+
+(function tick() {
+    const n    = new Date();
+    const dd   = String(n.getDate()).padStart(2,"0");
+    const mm   = String(n.getMonth()+1).padStart(2,"0");
+    const yyyy = n.getFullYear();
+    let   hh   = n.getHours();
+    const min  = String(n.getMinutes()).padStart(2,"0");
+    const sec  = String(n.getSeconds()).padStart(2,"0");
+    const ampm = hh >= 12 ? "PM" : "AM";
+    hh = hh % 12 || 12;
+    document.getElementById("datetime").innerText =
+        `Date & Time: ${dd}/${mm}/${yyyy} ${String(hh).padStart(2,"0")}:${min}:${sec} ${ampm}`;
+    setTimeout(tick, 1000);
+})();
+
+/* ============================================================
+   UI HELPERS
+   ============================================================ */
+// Remove any existing tooltip
+function clearTooltip() {
+    const t = document.getElementById("_fieldTooltip");
+    if (t) t.remove();
+}
+
+// Show tooltip anchored just below a specific input field
+// If no fieldId given, falls back to a general position
+function showMsg(text, isErr, fieldId) {
+    clearTooltip();
+    if (!text) return;
+
+    const tip = document.createElement("div");
+    tip.id = "_fieldTooltip";
+    tip.className = "field-tooltip" + (isErr ? "" : " ok");
+    tip.textContent = (isErr ? "⚠ " : "✓ ") + text;
+    document.body.appendChild(tip);
+
+    // Position below the target field
+    const el = fieldId
+        ? document.getElementById(fieldId)
+        : document.getElementById("fInwardNo"); // default anchor
+
+    if (el) {
+        const rect = el.getBoundingClientRect();
+        tip.style.top  = (rect.bottom + window.scrollY + 4) + "px";
+        tip.style.left = (rect.left  + window.scrollX) + "px";
+    }
+
+    clearTimeout(window._tooltipTimer);
+    window._tooltipTimer = setTimeout(clearTooltip, isErr ? 4000 : 2500);
+}
+
+/* Format stored "DD/MM/YYYY HH-MM" for grid display */
+function fmtDatetime(val) {
+    if (!val) return "";
+    return String(val).trim();
+}
+
+/* Convert Oracle date (any format) to display string for master read-only fields */
+function toDateInput(val) {
+    if (!val) return "";
+    try {
+        const m = String(val).replace(" ","T").match(/^(\d{4})-(\d{2})-(\d{2})/);
+        if (!m) return "";
+        return `${m[1]}-${m[2]}-${m[3]}`;
+    } catch { return ""; }
+}
+
+/* ============================================================
+   LOAD GATEPASS
+   Mirrors VB: mgp_no_Validate + initial_detail + header_fields
+   ============================================================ */
+async function loadGatepass() {
+    const gpNo = document.getElementById("gpNoSearch").value.trim().toUpperCase();
+    if (!gpNo) { showMsg("Please enter a Gatepass No.", true, "gpNoSearch"); return; }
+
+    resetEntryFields();
+    clearMasterFields();
+
+    try {
+        // 1. Header
+        const hRes  = await fetch(`/api/gatepass/header?gp_no=${encodeURIComponent(gpNo)}`);
+        const hData = await hRes.json();
+
+        if (!hRes.ok || hData.error) {
+            showMsg("GatePass No. does not exist.", true, "gpNoSearch");
+            currentGpNo = "";
+            return;
+        }
+
+        currentGpNo = gpNo;
+        populateMaster(hData);
+
+        // 2. Detail grid
+        await loadDetailGrid(gpNo);
+
+    } catch (err) {
+        showMsg("Network error: " + err.message, true);
+    }
+}
+
+/* Enter or Tab on search input triggers search */
+document.getElementById("gpNoSearch").addEventListener("keydown", function(e) {
+    if (e.key === "Enter" || e.key === "Tab") {
+        e.preventDefault();
+        loadGatepass();
+    }
+    // VB: block single-quote and comma
+    if (e.key === "'" || e.key === ",") e.preventDefault();
+});
+
+/* ============================================================
+   POPULATE MASTER (read-only)
+   ============================================================ */
+function populateMaster(h) {
+    const s = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ""; };
+    s("mSiteCode",   h.site_code);
+    s("mGpType",     h.gp_type);
+    s("mDeptCdMetr", h.dept_cd_metr);
+    s("mSuppCode",   h.supp_code);
+    s("mSuppName",   h.supp_name);
+    s("mAddr1",      h.addr1);
+    s("mAddr2",      h.addr2);
+    s("mAddr3",      h.addr3);
+    s("mCity",       h.city);
+    s("mTransType",  h.trans_type);
+    s("mVehicleNo",  h.vehicle_no);
+    s("mPhone",      h.phone);
+    s("mEmailAddr",  h.email_addr);
+    s("mCarryOutBy", h.carry_out_by);
+    s("mCourierNm",  h.courier_nm);
+    s("mDocketNo",   h.docket_no);
+    s("mDeptCode",   h.dept_code);
+    s("mSecRemark",  h.sec_remark);
+    s("mPrepBy",     h.prep_by);
+    document.getElementById("mGpDate").value    = h.gp_date    || "";
+    document.getElementById("mValidDate").value = h.valid_date || "";
+}
+
+function clearMasterFields() {
+    ["mSiteCode","mGpDate","mGpType","mDeptCdMetr","mSuppCode","mSuppName",
+     "mAddr1","mAddr2","mAddr3","mCity","mTransType","mVehicleNo","mPhone",
+     "mEmailAddr","mCarryOutBy","mCourierNm","mDocketNo","mDeptCode",
+     "mValidDate","mSecRemark","mPrepBy"]
+    .forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
+}
+
+/* ============================================================
+   LOAD DETAIL GRID
+   Mirrors VB: grid_det_def + loop Rs → grid_det.AddItem
+   ============================================================ */
+async function loadDetailGrid(gpNo) {
+    const tbody = document.getElementById("detailBody");
+    tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;padding:8px;color:#777;">Loading…</td></tr>`;
+
+    const res  = await fetch(`/api/gatepass/details?gp_no=${encodeURIComponent(gpNo)}`);
+    const rows = await res.json();
+
+    if (!rows || rows.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;padding:10px;color:#999;">No items found for this Gatepass.</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = "";
+    rows.forEach(r => {
+        const tr = document.createElement("tr");
+        tr.innerHTML =
+            `<td>${r.sr_no       ?? ""}</td>` +
+            `<td>${r.item_code   ?? ""}</td>` +
+            `<td>${r.item_descr  ?? ""}</td>` +
+            `<td>${r.uom         ?? ""}</td>` +
+            `<td>${r.quantity    ?? ""}</td>` +
+            `<td>${r.in_qty      ?? ""}</td>` +
+            `<td>${fmtDatetime(r.in_dttime)}</td>` +
+            `<td>${r.inward_no   ?? ""}</td>` +
+            `<td>${r.repair_chgs ?? ""}</td>` +
+            `<td>${r.edit_user   ?? ""}</td>`;
+        tr.addEventListener("click", () => onRowClick(tr, r));
+        tbody.appendChild(tr);
+    });
+}
+
+/* ============================================================
+   ROW CLICK
+   Mirrors VB: grid_det_Click
+   ============================================================ */
+function onRowClick(tr, r) {
+    // Highlight
+    document.querySelectorAll("#detailBody tr").forEach(t => t.classList.remove("selected"));
+    tr.classList.add("selected");
+
+    selectedSrNo = r.sr_no;
+    selectedQty  = parseFloat(r.quantity) || 0;
+
+    // Read-only display fields
+    document.getElementById("fSrNo").value     = r.sr_no     ?? "";
+    document.getElementById("fItemCode").value = r.item_code ?? "";
+    document.getElementById("fUom").value      = r.uom       ?? "";
+    document.getElementById("fQuantity").value = r.quantity  ?? "";
+
+    // Editable fields
+    // VB: min_qty = mquantity (pre-fill IN qty with out quantity)
+    const hasInQty = r.in_qty !== null && r.in_qty !== undefined && String(r.in_qty).trim() !== "";
+    document.getElementById("fInQty").value = hasInQty ? r.in_qty : r.quantity;
+
+
+    // Always pre-fill with current date & time — user can edit before saving
+    document.getElementById("fInDttime").value = serverDtStr();
+    document.getElementById("fRepairChgs").value = r.repair_chgs ?? "0";
+    document.getElementById("fInwardNo").value   = r.inward_no   ?? "";
+
+    // Enable editable fields
+    ["fInQty","fInDttime","fRepairChgs","fInwardNo"].forEach(id =>
+        document.getElementById(id).disabled = false
+    );
+    document.getElementById("btnOk").disabled = false;
+
+    // VB: min_qty.SetFocus
+    const iq = document.getElementById("fInQty");
+    iq.focus(); iq.select();
+}
+
+/* ============================================================
+   IN QTY BLUR VALIDATION  (mirrors VB: min_qty_Validate)
+   ============================================================ */
+document.getElementById("fInQty").addEventListener("change", function() {
+    const val = parseFloat(this.value) || 0;
+    if (val > selectedQty) {
+        showMsg(`IN Quantity cannot be greater than Out Quantity (${selectedQty}).`, true, "fInQty");
+        this.value = selectedQty;
+        this.focus(); this.select();
+    }
+});
+
+/* Only allow digits / decimal point  (mirrors VB: min_qty_KeyPress) */
+document.getElementById("fInQty").addEventListener("keypress", function(e) {
+    const ch = String.fromCharCode(e.which);
+    if (!/[\d.]/.test(ch)) { e.preventDefault(); return; }
+    if (ch === "." && this.value.includes(".")) e.preventDefault();
+});
+
+/* ============================================================
+   INWARD NO VALIDATION  (mirrors VB: minward_no_Validate)
+   ============================================================ */
+document.getElementById("fInwardNo").addEventListener("blur", function() {
+    if (this.value.trim() === "") {
+        showMsg("Inward No cannot be empty.", true, "fInwardNo");
+        setTimeout(() => this.focus(), 0);
+    }
+});
+
+/* ============================================================
+   SAVE IN/OUT  (mirrors VB: cmd_det_ok_Click)
+   ============================================================ */
+async function saveInOut() {
+    if (!currentGpNo)       { showMsg("No Gatepass loaded.", true, "gpNoSearch"); return; }
+    if (selectedSrNo===null){ showMsg("Please select a row from the grid first.", true, "gpNoSearch"); return; }
+
+    const inwardNo   = document.getElementById("fInwardNo").value.trim();
+    const inQty      = parseFloat(document.getElementById("fInQty").value) || 0;
+    // in_dttime stored as plain VARCHAR "DD/MM/YYYY HH-MM"
+    const inDttime   = document.getElementById("fInDttime").value.trim();
+    const repairChgs = document.getElementById("fRepairChgs").value.trim() || "0";
+
+    // Basic format validation: must be "DD/MM/YYYY HH-MM AM/PM"
+    if (inDttime && !/^\d{2}\/\d{2}\/\d{4} \d{2}-\d{2} (AM|PM)$/.test(inDttime)) {
+        showMsg("IN Date & Time must be in format DD/MM/YYYY HH-MM AM/PM  e.g. 25/03/2026 02-30 PM", true, "fInDttime");
+        document.getElementById("fInDttime").focus();
+        return;
+    }
+
+    // VB: minward_no_Validate
+    if (!inwardNo) {
+        showMsg("Inward No cannot be empty.", true, "fInwardNo");
+        document.getElementById("fInwardNo").focus();
+        return;
+    }
+    // VB: mIN_flg check
+    if (inQty > 0 && !inDttime) {
+        showMsg("Please select IN Date & Time to save the entry.", true, "fInDttime");
+        document.getElementById("fInDttime").focus();
+        return;
+    }
+    // VB: min_qty_Validate
+    if (inQty > selectedQty) {
+        showMsg(`IN Quantity (${inQty}) cannot be greater than Out Quantity (${selectedQty}).`, true, "fInQty");
+        document.getElementById("fInQty").focus();
+        return;
+    }
+
+    document.getElementById("btnOk").disabled = true;
+
+    try {
+        const res = await fetch("/api/gatepass/save_inout", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                gp_no:       currentGpNo,
+                sr_no:       selectedSrNo,
+                in_qty:      inQty,
+                in_dttime:   inDttime,
+                inward_no:   inwardNo,
+                repair_chgs: repairChgs
+            })
+        });
+        const data = await res.json();
+
+        if (!res.ok || data.error) {
+            showMsg("Error: " + (data.error || "Unknown error"), true);
+            document.getElementById("btnOk").disabled = false;
+            return;
+        }
+
+        // Refresh grid (mirrors VB: Call initial_detail)
+        await loadDetailGrid(currentGpNo);
+        resetEntryFields();
+
+    } catch (err) {
+        showMsg("Network error: " + err.message, true);
+        document.getElementById("btnOk").disabled = false;
+    }
+}
+
+/* ============================================================
+   RESET ENTRY FIELDS
+   ============================================================ */
+function resetEntryFields() {
+    ["fSrNo","fItemCode","fUom","fQuantity","fInQty","fInDttime","fRepairChgs","fInwardNo"]
+        .forEach(id => {
+            const el = document.getElementById(id);
+            el.value = "";
+            el.disabled = true;
+        });
+    document.getElementById("fRepairChgs").value = "0";
+    document.getElementById("btnOk").disabled = true;
+    selectedSrNo = null;
+    selectedQty  = 0;
+    document.querySelectorAll("#detailBody tr").forEach(t => t.classList.remove("selected"));
+}
+</script>
+</body>
+</html>

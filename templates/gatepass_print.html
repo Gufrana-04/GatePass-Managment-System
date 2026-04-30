@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Gatepass Printing</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/material-symbols.css') }}">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  height: 100%; font-family: 'DM Sans', sans-serif; font-size: 13px;
+  background-color: #e8f0f9;
+  background-image:
+    radial-gradient(ellipse 60% 55% at 10% 10%, rgba(190,218,248,0.6) 0%, transparent 65%),
+    radial-gradient(ellipse 55% 50% at 90% 90%, rgba(178,210,244,0.5) 0%, transparent 60%);
+  overflow: hidden;
+}
+/* ── BACKGROUND MESH ───────────────────────────── */
+body::after {
+  content: ''; position: fixed; inset: 0; z-index: 0;
+  background-image:
+    linear-gradient(rgba(100,140,200,0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(100,140,200,0.07) 1px, transparent 1px);
+  background-size: 36px 36px; pointer-events: none;
+}
+
+/* ── VIEWS ─────────────────────────────────────── */
+#criteriaView {
+  position: fixed; inset: 0; z-index: 10;
+  display: flex; align-items: center; justify-content: center; padding: 20px;
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+#criteriaView.hidden {
+  opacity: 0; transform: scale(0.96) translateY(-12px); pointer-events: none;
+}
+#reportView {
+  position: fixed; inset: 0; z-index: 9;
+  display: flex; flex-direction: column;
+  opacity: 0; transform: translateY(14px);
+  transition: opacity 0.4s ease, transform 0.4s ease; pointer-events: none;
+}
+#reportView.visible {
+  opacity: 1; transform: translateY(0); pointer-events: all;
+}
+
+/* ── CARD ──────────────────────────────────────── */
+.criteria-card {
+  position: relative; z-index: 1;
+  width: 100%; max-width: 520px;
+  background: #daeaf8;
+  border: 1px solid #0f172a;
+  border-radius: 14px;
+  box-shadow: 0 4px 20px rgba(30,58,95,0.11), 0 1px 4px rgba(30,58,95,0.07);
+  overflow: hidden;
+}
+.criteria-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
+  background: #1e3a5f;
+}
+
+/* ── CARD HEADER ───────────────────────────────── */
+.card-header {
+  padding: 26px 30px 18px; border-bottom: 1px solid #daeaf8;
+  display: flex; align-items: center; gap: 14px;
+}
+.card-header-icon {
+  width: 42px; height: 42px; border-radius: 10px;
+  background: #ddeef9; border: 1px solid #c4ddf0;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.card-header-icon .material-symbols-outlined { font-size: 21px; color: #1e3a5f; }
+.card-header-text h2 {
+  font-family: 'DM Sans', sans-serif; font-size: 16px; font-weight: 600;
+  color: #14253a; letter-spacing: 0.01em; line-height: 1.2;
+}
+.card-header-text p { font-size: 12px; color: #7a96b0; margin-top: 3px; }
+
+/* ── CARD BODY ─────────────────────────────────── */
+.card-body { padding: 20px 30px 26px; display: flex; flex-direction: column; gap: 14px; }
+
+/* ── SECTION LABEL ─────────────────────────────── */
+.section-label {
+  font-size: 11px; font-weight: 600; letter-spacing: 0.07em;
+  text-transform: uppercase; color: #1e3560; margin-bottom: -6px; padding-left: 1px;
+}
+
+/* ── FIELD GROUP ───────────────────────────────── */
+.field-group { display: flex; flex-direction: column; gap: 5px; }
+.field-group label {
+  font-size: 11px; font-weight: 600; color: #1e3560;
+  letter-spacing: 0.055em; text-transform: uppercase;
+}
+.field-group input, .field-group select {
+  background: #f8fbff; border: 1px solid #ccdff0;
+  border-radius: 7px; color: #14253a; padding: 8px 11px;
+  font-size: 13px; font-family: 'DM Sans', sans-serif;
+  width: 100%; outline: none;
+  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s; appearance: none;
+}
+.field-group input::placeholder { color: #a8bece; }
+.field-group input:focus, .field-group select:focus {
+  border-color: #7aaed6; background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(30,58,95,0.08);
+}
+.field-group input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.3) sepia(1) saturate(1.5) hue-rotate(185deg); cursor: pointer;
+}
+.field-group select option { background-color: #f3f8fe; color: #14253a; padding: 10px; }
+
+/* ── SELECT WRAP ───────────────────────────────── */
+.select-wrap { position: relative; }
+.select-wrap::after {
+  content: '▾';
+  position: absolute; right: 12px; top: 50%;
+  transform: translateY(-50%);
+  color: #1e3a5f; pointer-events: none; font-size: 12px;
+}
+.select-wrap select {
+  width: 100%; padding-right: 28px;
+  background: #f8fbff; color: #14253a;
+  border: 1px solid #ccdff0; border-radius: 7px;
+  appearance: none; cursor: pointer;
+}
+.select-wrap select option { background-color: #f3f8fe; color: #14253a; padding: 10px; }
+.select-wrap select:focus {
+  outline: none; border-color: #7aaed6; background: #ffffff;
+}
+
+/* ── RANGE ROW ─────────────────────────────────── */
+.range-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+/* ── DIVIDER ───────────────────────────────────── */
+.divider {
+  height: 1px;
+  background: #daeaf8;
+  margin: 2px 0;
+}
+
+/* ── RETRIEVE BUTTON ───────────────────────────── */
+.btn-retrieve {
+  background: #1e3a5f;
+  color: #fff; border: none; border-radius: 8px;
+  padding: 11px 0; cursor: pointer;
+  font-size: 13.5px; font-family: 'DM Sans', sans-serif;
+  font-weight: 600; letter-spacing: 0.03em; width: 100%; margin-top: 4px;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  transition: background 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 2px 10px rgba(30,58,95,0.20);
+  position: relative; overflow: hidden;
+}
+.btn-retrieve:hover { background: #27487a; box-shadow: 0 4px 16px rgba(30,58,95,0.28); }
+.btn-retrieve:active { transform: translateY(1px); }
+.btn-retrieve:disabled { background: #b8cfe4; color: #e8f2fa; box-shadow: none; cursor: not-allowed; transform: none; }
+.btn-retrieve .material-symbols-outlined { font-size: 18px; }
+
+/* ── STATUS MSG ────────────────────────────────── */
+.status-msg { font-size: 12px; color: #7a96b0; text-align: center; min-height: 18px; letter-spacing: 0.01em; }
+.status-msg.error { color: #c0392b; }
+.status-msg.ok    { color: #1a7a4a; }
+
+/* ── REPORT TOOLBAR ────────────────────────────── */
+.report-toolbar {
+  background: #1e3a5f;
+  border-bottom: 1px solid #16304f;
+  padding: 10px 20px; display: flex; align-items: center; gap: 14px;
+  flex-shrink: 0; z-index: 2; position: relative;
+}
+.btn-back {
+  display: flex; align-items: center; gap: 6px;
+  background: rgba(255,255,255,0.10); border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 7px; color: #c8ddf0; padding: 6px 13px; cursor: pointer;
+  font-size: 13px; font-family: 'DM Sans', sans-serif; font-weight: 500; transition: all 0.2s;
+}
+.btn-back:hover { background: rgba(255,255,255,0.18); color: #fff; }
+.btn-back .material-symbols-outlined { font-size: 17px; }
+.toolbar-title {
+  color: #e8f2fa; font-size: 14px; font-weight: 600;
+  font-family: 'DM Sans', sans-serif; letter-spacing: 0.02em; flex: 1;
+}
+.gp-count { color: #7aaed6; font-size: 12px; }
+.btn-print {
+  background: #2a6e4a;
+  color: #fff; border: none; border-radius: 7px; padding: 7px 16px; cursor: pointer;
+  font-size: 13px; font-family: 'DM Sans', sans-serif;
+  font-weight: 600; display: flex; align-items: center; gap: 6px;
+  transition: background 0.2s; box-shadow: 0 2px 8px rgba(30,90,60,0.25);
+}
+.btn-print:hover { background: #235c3d; }
+.btn-print:disabled { background: #2d4a5e; color: #5a7a8e; box-shadow: none; cursor: not-allowed; }
+.btn-print .material-symbols-outlined { font-size: 17px; }
+
+/* ── PREVIEW SCROLL ────────────────────────────── */
+.preview-scroll {
+  flex: 1; overflow-y: auto; padding: 28px 20px;
+  display: flex; flex-direction: column; align-items: center; gap: 28px;
+  background-color: #dde8f2;
+  background-image:
+    linear-gradient(rgba(100,140,200,0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(100,140,200,0.06) 1px, transparent 1px);
+  background-size: 36px 36px;
+}
+.empty-state {
+  color: #7a96b0; font-size: 15px; margin-top: 80px; text-align: center;
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+}
+.empty-state .material-symbols-outlined { font-size: 48px; color: #a8c0d6; }
+
+/* ══════════════════════════════════════════════════
+   A4 PAGE — strict 210 x 297 mm
+   ══════════════════════════════════════════════════ */
+.a4-page {
+  width:  210mm; height: 297mm;
+  min-width: 210mm; max-width: 210mm;
+  min-height: 297mm; max-height: 297mm;
+  overflow: hidden; background: #fff;
+  box-shadow: 0 4px 20px rgba(0,0,0,.28);
+  padding: 6mm 8mm 6mm;
+  position: relative;
+  page-break-after: always; page-break-inside: avoid;
+  font-family: 'Times New Roman', serif;
+  font-size: 12px; color: #111;
+  display: flex; flex-direction: column; flex-shrink: 0;
+}
+
+@media print {
+  html, body {
+    height: auto !important;
+    background: #fff !important;
+    overflow: visible !important;
+  }
+  body::after { display: none !important; }
+  #criteriaView, #reportView .report-toolbar, .empty-state { display: none !important; }
+  #reportView {
+    position: static !important;
+    inset: auto !important;
+    z-index: auto !important;
+    display: block !important;
+    opacity: 1 !important;
+    transform: none !important;
+    pointer-events: auto !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+  .preview-scroll {
+    display: block !important; padding: 0 !important; margin: 0 !important;
+    gap: 0 !important; background: #fff !important; overflow: visible !important;
+    height: auto !important;
+  }
+  .a4-page {
+    width: 210mm !important; height: 297mm !important;
+    min-height: 297mm !important; max-height: 297mm !important;
+    padding: 6mm 8mm 6mm !important; box-shadow: none !important;
+    page-break-after: always;
+    break-after: page;
+    overflow: hidden !important;
+    margin: 0 !important;
+  }
+  .a4-page:last-child { page-break-after: auto !important; break-after: auto !important; }
+  @page { size: A4 portrait; margin: 0; }
+}
+
+/* ══════════════════════════════════════════════════
+   GATE PASS BOX (unchanged styles)
+   ══════════════════════════════════════════════════ */
+.gp-box { flex: 1; display: flex; flex-direction: column; }
+.gp-co-header { border-bottom: none; padding: 25px 10px 10px; text-align: center; position: relative; }
+.gp-co-name { font-size: 18px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: #111; line-height: 1.6; }
+.gp-co-line { font-size: 12.5px; color: #222; line-height: 1.8; }
+.gp-pageno { position: absolute; top: 6px; right: 10px; font-size: 10.5px; font-weight: 600; color: #444; }
+.gp-badge { display: block; text-align: center; font-size: 14px; font-weight: 700; letter-spacing: .07em; border-bottom: 2px solid #111; padding: 3px 16px; margin-top: 0; text-transform: uppercase; }
+.gp-title { background: #fff; color: #111; text-align: center; padding: 5px 0; font-size: 17px; font-weight: 700; text-transform: uppercase; }
+.gp-info-row { display: flex; font-size: 12px; }
+.gp-info-cell { display: flex; align-items: baseline; gap: 5px; padding: 6px 8px; flex: 1; }
+.gp-info-cell.bdr { border-right: none; }
+.gp-lbl { font-weight: 700; white-space: nowrap; color: #111; min-width: 115px; }
+.gp-val { flex: 1; border-bottom: none; min-width: 0; }
+.gp-val.plain { border-bottom: none; }
+.gp-tbl-wrap { flex: 1; }
+.gp-tbl { width: 100%; border-collapse: collapse; font-size: 12px; }
+.gp-tbl thead th { color: #111; padding: 5px 6px; font-size: 13.5px; font-weight: 700; border: 1px solid #555; text-align: center; }
+.gp-tbl tbody td { padding: 4px 6px; border: none; vertical-align: top; }
+.tc-no { width: 30px; text-align: center; }
+.tc-code { width: 92px; }
+.tc-uom { width: 44px; text-align: center; }
+.tc-qty { width: 66px; text-align: right; }
+.gp-remark-td { font-style: italic; font-size: 12px; color: #555; padding: 0px 6px 3px 18px !important; border-top: none !important; background: transparent !important; }
+.gp-tc { padding: 4px 8px; font-size: 12px; color: #333; }
+.gp-tc-title { font-weight: 700; font-size: 11.5px; }
+.gp-sig-row { display: grid; grid-template-columns: 1fr 1fr 1fr; border-bottom: 1px solid #555; }
+.gp-sig-cell { padding: 6px 10px 5px; text-align: center; font-size: 12.5px; }
+.gp-sig-heading { font-weight: 700; font-size: 13px; color: #111; }
+.gp-sig-space { height: 26px; }
+.gp-sig-name { font-weight: 700; font-size: 13px; }
+.gp-sig-dept { font-size: 11.5px; color: #555; margin-top: 2px; }
+.gp-legal { padding: 5px 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 2px 16px; font-size: 12px; color: #222; }
+.gp-legal span { white-space: nowrap; }
+</style>
+</head>
+<body>
+
+<!-- ═══ CRITERIA VIEW ═══════════════════════════════════════════════ -->
+<div id="criteriaView">
+  <div class="criteria-card">
+
+    <div class="card-header">
+      <div class="card-header-icon">
+        <span class="material-symbols-outlined">print</span>
+      </div>
+      <div class="card-header-text">
+        <h2>Gatepass Printing</h2>
+        <p>Set filters to preview &amp; print gate passes</p>
+      </div>
+    </div>
+
+    <div class="card-body">
+
+      <!-- Site -->
+      <div class="field-group">
+        <label>Site Code</label>
+        <div class="select-wrap">
+          <select id="fSiteCode">
+            <option value="{{ site_code }}">{{ site_code }}</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- GP No range -->
+      <div class="section-label">GP Number Range</div>
+      <div class="range-row">
+        <div class="field-group">
+          <label>From</label>
+          <input type="text" id="fGpFrom" placeholder="0" maxlength="30">
+        </div>
+        <div class="field-group">
+          <label>To</label>
+          <input type="text" id="fGpTo" placeholder="ZZZZ" maxlength="30">
+        </div>
+      </div>
+
+      <!-- Date range -->
+      <div class="section-label">Date Range</div>
+      <div class="range-row">
+        <div class="field-group">
+          <label>From</label>
+          <input type="date" id="fDateFrom">
+        </div>
+        <div class="field-group">
+          <label>To</label>
+          <input type="date" id="fDateTo">
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Dept range -->
+      <div class="section-label">Department Range</div>
+      <div class="range-row">
+        <div class="field-group">
+          <label>From</label>
+          <input type="text" id="fDeptFrom" placeholder="e.g. 0" maxlength="20">
+        </div>
+        <div class="field-group">
+          <label>To</label>
+          <input type="text" id="fDeptTo" placeholder="e.g. ZZZZ" maxlength="20">
+        </div>
+      </div>
+
+      <button class="btn-retrieve" id="btnRetrieve" onclick="retrieve()">
+        <span class="material-symbols-outlined">search</span>
+        Retrieve
+      </button>
+      <div class="status-msg" id="statusMsg"></div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ═══ REPORT VIEW ══════════════════════════════════════════════════ -->
+<div id="reportView">
+  <div class="report-toolbar">
+    <button class="btn-back" onclick="goBack()">
+      <span class="material-symbols-outlined">arrow_back</span>
+      Back
+    </button>
+    <span class="toolbar-title"> Preview</span>
+    <span class="gp-count" id="gpCount"></span>
+    <button class="btn-print" id="btnPrint" onclick="window.print()" disabled>
+      <span class="material-symbols-outlined">print</span>
+      Print
+    </button>
+  </div>
+  <div class="preview-scroll" id="previewScroll">
+    <div class="empty-state" id="emptyState">
+      <span class="material-symbols-outlined">description</span>
+      Set filters and click Retrieve to preview gatepasses.
+    </div>
+  </div>
+</div>
+
+<script>
+/* ── View switching ─────────────────────────────── */
+function showReport() {
+  document.getElementById('criteriaView').classList.add('hidden');
+  const rv = document.getElementById('reportView');
+  rv.classList.add('visible');
+}
+
+function goBack() {
+  document.getElementById('criteriaView').classList.remove('hidden');
+  document.getElementById('reportView').classList.remove('visible');
+}
+
+/* ── Load site codes ────────────────────────────── */
+async function loadSiteCodes() {
+  try {
+    const data = await (await fetch('/api/sitecodes')).json();
+    const sel  = document.getElementById('fSiteCode');
+    const cur  = sel.value; sel.innerHTML = '';
+    data.forEach(d => {
+      const o = document.createElement('option');
+      o.value = d.site_code; o.textContent = d.site_code;
+      if (d.site_code === cur) o.selected = true;
+      sel.appendChild(o);
+    });
+  } catch (_) {}
+}
+loadSiteCodes();
+
+/* ── Default dates = today ──────────────────────── */
+(function() {
+  const t = new Date().toISOString().split('T')[0];
+  document.getElementById('fDateFrom').value = t;
+  document.getElementById('fDateTo').value   = t;
+})();
+
+/* ── Retrieve ───────────────────────────────────── */
+async function retrieve() {
+  const btn = document.getElementById('btnRetrieve');
+  const msg = document.getElementById('statusMsg');
+  btn.disabled = true;
+  msg.className = 'status-msg'; msg.textContent = 'Fetching…';
+
+  const p = new URLSearchParams({
+    site_code: document.getElementById('fSiteCode').value.trim()
+  });
+  const df  = isoToDDMMYY(document.getElementById('fDateFrom').value);
+  const dt  = isoToDDMMYY(document.getElementById('fDateTo').value);
+  const dpf = document.getElementById('fDeptFrom').value.trim().toUpperCase();
+  const dpt = document.getElementById('fDeptTo').value.trim().toUpperCase();
+  const gpf = document.getElementById('fGpFrom').value.trim().toUpperCase();
+  const gpt = document.getElementById('fGpTo').value.trim().toUpperCase();
+
+  if (df && dt)   { p.set('date_from', df);  p.set('date_to',  dt); }
+  if (dpf && dpt) { p.set('dept_from', dpf); p.set('dept_to',  dpt); }
+  if (gpf && gpt) { p.set('gp_from',   gpf); p.set('gp_to',    gpt); }
+
+  try {
+    const data = await (await fetch('/api/report/gatepass?' + p)).json();
+    if (data.error) throw new Error(data.error);
+    renderPages(data);
+    const cnt = data.length;
+    msg.className = 'status-msg ok';
+    msg.textContent = cnt ? `${cnt} gatepass(es) found.` : 'No gatepasses found.';
+    document.getElementById('gpCount').textContent = cnt ? `${cnt} page(s)` : '';
+    document.getElementById('btnPrint').disabled = !cnt;
+    if (cnt) showReport();
+  } catch (err) {
+    msg.className = 'status-msg error';
+    msg.textContent = 'Error: ' + err.message;
+  } finally { btn.disabled = false; }
+}
+
+/* ── Render all pages ───────────────────────────── */
+function renderPages(records) {
+  const scroll = document.getElementById('previewScroll');
+  scroll.querySelectorAll('.a4-page').forEach(p => p.remove());
+  const empty = document.getElementById('emptyState');
+  if (!records.length) { empty.style.display = 'flex'; return; }
+  empty.style.display = 'none';
+
+  const pages = [];
+  records.forEach(rec => {
+    const ROWS = 10;
+    const det  = rec.details || [];
+    const tot  = Math.max(1, Math.ceil(det.length / ROWS));
+    for (let pg = 0; pg < tot; pg++) {
+      pages.push({
+        header: rec.header,
+        chunk: det.slice(pg * ROWS, (pg + 1) * ROWS),
+        isLastForRecord: pg === tot - 1,
+        details: det
+      });
+    }
+  });
+
+  const totalPages = pages.length;
+  pages.forEach((p, idx) => {
+    scroll.appendChild(
+      buildPage(p.header, p.chunk, idx + 1, totalPages, p.isLastForRecord, p.details)
+    );
+  });
+}
+
+/* ── Build one A4 gate pass page ────────────────── */
+function buildPage(h, chunk, pageNum, totalPages, isLast, allDet) {
+  const page = el('div', 'a4-page');
+  const box  = el('div', 'gp-box');
+
+  const coHdr = el('div', 'gp-co-header');
+  const pgn = el('span', 'gp-pageno');
+  pgn.textContent = `Page ${pageNum} of ${totalPages}`;
+  coHdr.appendChild(pgn);
+  const coName = el('div', 'gp-co-name');
+  coName.textContent = 'GIMATEX INDUSTRIES PVT. LTD., HGT';
+  coHdr.appendChild(coName);
+  const coL1 = el('div', 'gp-co-line');
+  coL1.textContent = '7,9/1,9/2B, RAM MANDIR WARD, KALI SADAK,';
+  coHdr.appendChild(coL1);
+  const coL2 = el('div', 'gp-co-line');
+  coL2.textContent = 'HINGANGHAT DIST.: WARDHA  –  HINGANGHAT 442301';
+  coHdr.appendChild(coL2);
+  box.appendChild(coHdr);
+
+  const titleBar = el('div', 'gp-title');
+  titleBar.textContent = 'GATE PASS';
+  box.appendChild(titleBar);
+
+  const badge = el('div', 'gp-badge');
+  badge.textContent = resolveGpType(h.gp_type);
+  box.appendChild(badge);
+
+  const row1 = el('div', 'gp-info-row');
+  row1.appendChild(mkCell('Gate Pass No. :', h.gp_no || '—', true));
+  row1.appendChild(mkCell('Gate Pass Date. :', h.gp_date || '', false));
+  box.appendChild(row1);
+
+  const row2 = el('div', 'gp-info-row');
+  row2.appendChild(mkCell('Vendor Name  :', h.supp_name || '—', true));
+  row2.appendChild(mkCell('LR No. / Doc No. :', h.docket_no || '', false));
+  box.appendChild(row2);
+
+  const row3 = el('div', 'gp-info-row');
+  const addrCell = el('div', 'gp-info-cell');
+  addrCell.style.flex = '1';
+  const aLbl = el('span', 'gp-lbl'); aLbl.textContent = 'Address      :';
+  const aVal = el('span', 'gp-val');
+  aVal.textContent = [h.addr1, h.addr2, h.addr3, h.city].filter(Boolean).join(', ') || '';
+  addrCell.appendChild(aLbl); addrCell.appendChild(aVal);
+  row3.appendChild(addrCell);
+  box.appendChild(row3);
+
+  const row4 = el('div', 'gp-info-row');
+  const mCell = el('div', 'gp-info-cell');
+  mCell.style.flex = '1';
+  const mLbl = el('span', 'gp-lbl'); mLbl.textContent = 'Mode Of Despatch :';
+  const mVal = el('span', 'gp-val plain'); mVal.textContent = h.trans_type || 'Road';
+  mCell.appendChild(mLbl); mCell.appendChild(mVal);
+  row4.appendChild(mCell);
+  box.appendChild(row4);
+
+  const tWrap = el('div', 'gp-tbl-wrap');
+  const tbl   = el('table', 'gp-tbl');
+  const thead = document.createElement('thead');
+  const htr   = document.createElement('tr');
+  [['Sr.','tc-no'],['Item Code','tc-code'],['Description','tc-desc'],
+   ['Unit','tc-uom'],['Quantity','tc-qty']].forEach(([t, c]) => {
+    const th = document.createElement('th');
+    th.className = c; th.textContent = t; htr.appendChild(th);
+  });
+  thead.appendChild(htr); tbl.appendChild(thead);
+
+  const tbody = document.createElement('tbody');
+  chunk.forEach(d => {
+    const tr = document.createElement('tr');
+    [[d.sr_no,'tc-no'],[d.item_code,'tc-code'],[d.item_descr,'tc-desc'],
+     [d.uom,'tc-uom'],[fmtQty(d.quantity),'tc-qty']].forEach(([v, c]) => {
+      const td = document.createElement('td');
+      td.className = c;
+      if (c === 'tc-desc' && d.item_descr_add) {
+        td.textContent = v || '';
+        const sub = document.createElement('div');
+        sub.style.cssText = 'font-size:10px;color:#444;margin-top:1px;';
+        sub.textContent = d.item_descr_add;
+        td.appendChild(sub);
+      } else {
+        td.textContent = (v !== null && v !== undefined) ? v : '';
+      }
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+
+    const rtr = document.createElement('tr');
+    const r1  = document.createElement('td'); r1.className = 'tc-no gp-remark-td';
+    const r2  = document.createElement('td'); r2.className = 'tc-code gp-remark-td';
+    const rtd = document.createElement('td');
+    rtd.colSpan = 3; rtd.className = 'gp-remark-td';
+    rtd.textContent = 'Repair Remark : ' + (d.rep_remark || '');
+    rtr.appendChild(r1); rtr.appendChild(r2); rtr.appendChild(rtd);
+    tbody.appendChild(rtr);
+  });
+  tbl.appendChild(tbody); tWrap.appendChild(tbl); box.appendChild(tWrap);
+
+  const tc = el('div', 'gp-tc');
+  const tcT = el('div', 'gp-tc-title'); tcT.textContent = 'Terms & Condition :';
+  tc.appendChild(tcT); tc.style.minHeight = '150px';
+  [h.tc1, h.tc2, h.tc3, h.tc4, h.tc5, h.tc6].filter(Boolean).forEach(line => {
+    const p = document.createElement('p');
+    p.style.cssText = 'margin-left:14px;margin-top:1px;';
+    p.textContent = line; tc.appendChild(p);
+  });
+  box.appendChild(tc);
+
+  const sigRow = el('div', 'gp-sig-row');
+  [
+    { heading:'Prepared By',          name: h.prep_by || '', sub: h.dept_code ? 'Dept: ' + h.dept_code : '' },
+    { heading:'Store Officer',        name: '',              sub: '' },
+    { heading:'Authorised Signatory', name: '',              sub: '' },
+  ].forEach(s => {
+    const cell = el('div', 'gp-sig-cell');
+    const hd = el('div', 'gp-sig-heading'); hd.textContent = s.heading;
+    const sp = el('div', 'gp-sig-space');
+    const nm = el('div', 'gp-sig-name');    nm.textContent = s.name;
+    const sb = el('div', 'gp-sig-dept');    sb.textContent = s.sub;
+    cell.appendChild(hd); cell.appendChild(sp); cell.appendChild(nm); cell.appendChild(sb);
+    sigRow.appendChild(cell);
+  });
+  box.appendChild(sigRow);
+
+  const legal = el('div', 'gp-legal');
+  const cstNo = h.cst_tin_no   || '27330410222C';
+  const cstDt = h.cst_tin_date ? ' w.e.f.' + h.cst_tin_date : ' w.e.f.01/04/06';
+  const vatNo = h.vat_tin_no   || '27330410222V';
+  const vatDt = h.vat_tin_date ? ' w.e.f.' + h.vat_tin_date : ' w.e.f.01/04/06';
+  const eccNo = h.ecc_reg_no   || 'AAACV-5657K-XM-003';
+  [`CST.TIN : ${cstNo}${cstDt}`, `ECC Reg No. ${eccNo}`,
+   `VAT.TIN : ${vatNo}${vatDt}`, `CIN : U17120MH1994PTC079863`].forEach(txt => {
+    const s = el('span'); s.textContent = txt; legal.appendChild(s);
+  });
+  box.appendChild(legal);
+  page.appendChild(box);
+  return page;
+}
+
+/* ── Helpers ────────────────────────────────────── */
+function resolveGpType(gp_type) {
+  if (!gp_type) return 'NON RETURNABLE OUTSIDE';
+  const t = String(gp_type).trim().toUpperCase();
+  if (t === 'R-OUT')  return 'RETURNABLE OUTSIDE';
+  if (t === 'R-IU')   return 'RETURNABLE INTER-UNIT';
+  if (t === 'NR-OUT') return 'NON RETURNABLE OUTSIDE';
+  if (t === 'NR-IU')  return 'NON RETURNABLE INTER-UNIT';
+  if (t === 'RO')  return 'RETURNABLE OUTSIDE';
+  if (t === 'RI')  return 'RETURNABLE INTER-UNIT';
+  if (t === 'NRO') return 'NON RETURNABLE OUTSIDE';
+  if (t === 'NRI') return 'NON RETURNABLE INTER-UNIT';
+  if (t === 'RETURNABLE OUTSIDE')        return 'RETURNABLE OUTSIDE';
+  if (t === 'RETURNABLE INTER UNIT')     return 'RETURNABLE INTER-UNIT';
+  if (t === 'NON RETURNABLE OUTSIDE')    return 'NON RETURNABLE OUTSIDE';
+  if (t === 'NON RETURNABLE INTER UNIT') return 'NON RETURNABLE INTER-UNIT';
+  if (t === 'NON RETURNABLE') return 'NON RETURNABLE OUTSIDE';
+  if (t === 'RETURNABLE')     return 'RETURNABLE OUTSIDE';
+  return gp_type;
+}
+
+function mkCell(labelTxt, valueTxt, hasBdr) {
+  const cell = el('div', 'gp-info-cell' + (hasBdr ? ' bdr' : ''));
+  const lbl = el('span', 'gp-lbl'); lbl.textContent = labelTxt;
+  const val = el('span', 'gp-val'); val.textContent = valueTxt || '';
+  cell.appendChild(lbl); cell.appendChild(val);
+  return cell;
+}
+
+function fmtQty(v) {
+  const n = parseFloat(v);
+  return isNaN(n) ? '' : n.toFixed(2);
+}
+
+function el(tag, cls) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  return e;
+}
+
+function isoToDDMMYY(iso) {
+  if (!iso) return '';
+  const [y, m, d] = iso.split('-');
+  return y ? `${d}/${m}/${y.slice(2)}` : '';
+}
+
+/* Enter key triggers retrieve */
+document.querySelectorAll('#criteriaView input, #criteriaView select').forEach(i =>
+  i.addEventListener('keydown', e => { if (e.key === 'Enter') retrieve(); })
+);
+</script>
+</body>
+</html>
