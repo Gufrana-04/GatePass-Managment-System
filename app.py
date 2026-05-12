@@ -5,7 +5,7 @@ from datetime import datetime
 import config
 
 app = Flask(__name__)
-app.secret_key = "my_super_secret_key_123"
+app.secret_key = config.SECRET_KEY
 
 # thick mode using config
 try:
