@@ -13,3 +13,6 @@ DB_DSN = "your_host:your_port/your_service_name"
 
 # Optional: Oracle Client Path
 ORACLE_CLIENT_PATH = r"C:\path\to\your\oracle\instantclient"
+
+#secrest key
+SECRET_KEY ="your_secret_key"
