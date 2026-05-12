@@ -85,10 +85,3 @@ The application connects to Oracle in thick mode using the Oracle Instant Client
 - If Oracle connection errors appear, verify the Instant Client installation and that the DSN is reachable.
 - If templates do not load, confirm the required files are present in `templates/`.
 
-## Security Notes
-
-Do not commit real database credentials or secret keys to a public repository. For production use, move sensitive values to environment variables or a secure secret manager.
-
-## License
-
-Internal project. Add a license here if the repository will be shared externally.
